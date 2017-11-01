@@ -7,7 +7,7 @@ Usage:
 
 from setuptools import setup
 
-APP = ['App.py']
+APP = ['Grid.py']
 DATA_FILES = []
 OPTIONS = {}
 
