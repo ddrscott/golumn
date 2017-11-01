@@ -97,10 +97,9 @@ class GolumnApp(wx.App):
         self.grid.Fit()
 
         # load as frame
-        self.frm.SetTitle(title)
+        self.frm.SetTitle('{} - rows: {:,}'.format(title, len(rows)))
         # force scrollbars to redraw
         self.frm.PostSizeEvent()
-
 
 
 def main():
