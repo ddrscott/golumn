@@ -66,11 +66,27 @@ class ArrayGrid(wx.grid.Grid):
         self.AutoSizeColumns(False)
 
 
+class GolumnFrame(wx.Frame):
+    def __init__(self, *args, **kw):
+        wx.Frame.__init__(self, *args, **kw)
+        self.MakeMenuBar()
+
+    def MakeMenuBar(self):
+        def doBind(item, handler, updateUI=None):
+            self.Bind(wx.EVT_MENU, handler, item)
+            if updateUI is not None:
+                self.Bind(wx.EVT_UPDATE_UI, updateUI, item)
+
+        # Eventhough there are no items, this will enable the Cmd-Quit
+        mb = wx.MenuBar()
+        self.SetMenuBar(mb)
+
+
 class GolumnApp(wx.App):
 
     def OnInit(self):
         self.SetAppName('Golumn')
-        self.frm = wx.Frame(None, size=(640, 400))
+        self.frm = GolumnFrame(None, size=(640, 400))
         self.frm.Centre()
         self.frm.Show()
         return True
@@ -84,6 +100,7 @@ class GolumnApp(wx.App):
         self.frm.SetTitle(title)
         # force scrollbars to redraw
         self.frm.PostSizeEvent()
+
 
 
 def main():
