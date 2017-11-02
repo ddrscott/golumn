@@ -2,68 +2,12 @@ import os
 import sys
 import csv
 import wx
-import wx.grid
 import wx.aui
+import wx.grid
+import wx.lib.newevent
+import ArrayGrid
 
-try:
-    import agw.flatnotebook as FNB
-except ImportError: # if it's not there locally, try the wxPython lib.
-    import wx.lib.agw.flatnotebook as FNB
-
-
-class ArrayTable(wx.grid.GridTableBase):
-    def __init__(self, data, headers=None):
-        wx.grid.GridTableBase.__init__(self)
-        if headers is None:
-            self.headers = data.pop(0)
-        else:
-            self.headers = headers
-        self.data = data
-
-        if len(self.data) > 100:
-            self.fakeLimit = 100
-            wx.CallLater(1, self.UnsetFakeLimit)
-
-    def UnsetFakeLimit(self):
-        self.fakeLimit = None
-        msg = wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data) - 100)
-        self.GetView().ProcessTableMessage(msg)
-
-    # Called when the grid needs to display labels
-    def GetColLabelValue(self, col):
-        return self.headers[col]
-
-    def GetNumberRows(self):
-        if self.fakeLimit is not None:
-            return self.fakeLimit
-        else:
-            return len(self.data)
-
-    def GetNumberCols(self):
-        return len(self.headers)
-
-    def IsEmptyCell(self, row, col):
-        return not self.data[row][col]
-
-    def GetValue(self, row, col):
-        return self.data[row][col]
-
-    def SetValue(self, row, col, value):
-        self.data[row][col] = value
-
-
-class ArrayGrid(wx.grid.Grid):
-    def __init__(self, parent, data):
-        wx.grid.Grid.__init__(self)
-        self.Create(parent)
-
-        # assign data adapter
-        table = ArrayTable(data=data)
-        self.SetTable(table, True)
-        self.SetColLabelSize(20)
-        self.SetRowLabelSize(0)
-        self.SetMargins(-20, -20)   # remove whitespace around whole grid
-        self.AutoSizeColumns(False)
+NewCopyEvent, EVT_COPY_EVENT = wx.lib.newevent.NewEvent()
 
 
 class GolumnFrame(wx.Frame):
@@ -72,13 +16,10 @@ class GolumnFrame(wx.Frame):
         self.MakeMenuBar()
 
     def MakeMenuBar(self):
-        def doBind(item, handler, updateUI=None):
-            self.Bind(wx.EVT_MENU, handler, item)
-            if updateUI is not None:
-                self.Bind(wx.EVT_UPDATE_UI, updateUI, item)
-
-        # Eventhough there are no items, this will enable the Cmd-Quit
+        editMenu = wx.Menu()
+        editMenu.Append(wx.ID_COPY, "&Copy\tCtrl+C")
         mb = wx.MenuBar()
+        mb.Append(editMenu, "&Edit")
         self.SetMenuBar(mb)
 
 
@@ -93,7 +34,8 @@ class GolumnApp(wx.App):
 
     def LoadData(self, title, rows):
         # Setup the grid BEFORE the frame
-        self.grid = ArrayGrid(self.frm, rows)
+        self.grid = ArrayGrid.ArrayGrid(self.frm, rows)
+        self.grid.SetRowLabelSize(len(str(len(rows))) * 8)
         self.grid.Fit()
 
         # load as frame
