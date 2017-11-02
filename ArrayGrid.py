@@ -17,7 +17,7 @@ class ArrayGrid(wx.grid.Grid):
         self.SetTable(table, True)
         self.SetColLabelSize(20)
         self.SetRowLabelSize(20)
-        self.SetMargins(-20, -20)   # remove whitespace around whole grid
+        self.SetMargins(-10, -10)   # remove some whitespace, but leave enough for scrollbar overlap
         self.AutoSizeColumns(False)
         self.DisableDragRowSize()
 
