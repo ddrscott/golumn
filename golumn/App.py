@@ -16,59 +16,55 @@ class GolumnFrame(wx.Frame):
         self.MakeMenuBar()
 
     def MakeMenuBar(self):
+        mb = wx.MenuBar()
+
+        # setup File menu
+        fileMenu = wx.Menu()
+        fileMenu.Append(wx.ID_CLOSE, "&Close\tCtrl+W")
+        self.Bind(wx.EVT_MENU, self.on_close, id=wx.ID_CLOSE)
+        mb.Append(fileMenu, "&File")
+
+        # setup Edit menu
         editMenu = wx.Menu()
         editMenu.Append(wx.ID_COPY, "&Copy\tCtrl+C")
-        mb = wx.MenuBar()
         mb.Append(editMenu, "&Edit")
+
+        # finally assign it to the frame
         self.SetMenuBar(mb)
+
+    def on_close(self, evt=None):
+        self.Close()
+        self.Destroy()
 
 
 class GolumnApp(wx.App):
-
     def OnInit(self):
         self.SetAppName('Golumn')
-        self.frm = GolumnFrame(None, size=(640, 400))
-        self.frm.Centre()
-        self.frm.Show()
         return True
 
     def LoadData(self, title, rows):
+        title_with_rows = '{} - rows: {:,}'.format(title, len(rows))
+        frm = GolumnFrame(None, title=title_with_rows, size=(640, 400))
+        frm.Centre()
+        frm.Show()
+
         # Setup the grid BEFORE the frame
-        self.grid = ArrayGrid.ArrayGrid(self.frm, rows)
-        self.grid.SetRowLabelSize(len(str(len(rows))) * 8)
-        self.grid.Fit()
+        grid = ArrayGrid.ArrayGrid(frm, rows)
+        grid.SetRowLabelSize(len(str(len(rows))) * 8)
+        grid.Fit()
 
-        # load as frame
-        self.frm.SetTitle('{} - rows: {:,}'.format(title, len(rows)))
         # force scrollbars to redraw
-        self.frm.PostSizeEvent()
+        frm.PostSizeEvent()
 
-
-def main():
-    # verify no other instance is running
-    checker = wx.SingleInstanceChecker("Golumn")
-    if checker.IsAnotherRunning():
-        print("TODO Another instance is running. Reuse it, please.")
-
-    # get data from stdin or a file name
-    file_name = sys.argv[1]
-    title = os.path.basename(file_name)
-    rows = []
-    with open(file_name, 'rb') as csvfile:
-
+    def LoadFile(self, title, input_file):
+        rows = []
         # detect file type
-        dialect = csv.Sniffer().sniff(csvfile.read(1024 * 50))
-        csvfile.seek(0)
-        csvreader = csv.reader(csvfile, dialect)
+        dialect = csv.Sniffer().sniff(input_file.read(1024 * 50))
+        input_file.seek(0)
+        csvreader = csv.reader(input_file, dialect)
 
         # convert csv reader to rows
         for row in csvreader:
             rows.append(row)
 
-    app = GolumnApp(useBestVisual=True)
-    app.LoadData(title, rows)
-    app.MainLoop()
-
-
-# if __name__ == '__main__':
-#     main()
+        self.LoadData(title, rows)

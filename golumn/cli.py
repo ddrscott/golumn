@@ -43,6 +43,7 @@ def main(args=None):
     parser = create_parser()
     args = parser.parse_args(args)
 
+    app = GolumnApp(useBestVisual=True)
     input_file = None
     try:
         if args.filename is None:  # read from stdin
@@ -52,20 +53,9 @@ def main(args=None):
         else:
             input_file = open(args.filename, 'rb')
 
-        rows = []
-        # detect file type
-        dialect = csv.Sniffer().sniff(input_file.read(1024 * 50))
-        input_file.seek(0)
-        csvreader = csv.reader(input_file, dialect)
-
-        # convert csv reader to rows
-        for row in csvreader:
-            rows.append(row)
+        title = args.title or os.path.basename(args.filename or '-')
+        app.LoadFile(title, input_file)
+        app.MainLoop()
     finally:
         input_file.close()
-
-    app = GolumnApp(useBestVisual=True)
-    app.LoadData(args.title or os.path.basename(args.filename or '-'), rows)
-    app.MainLoop()
-
     return 0
