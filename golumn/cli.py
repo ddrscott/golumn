@@ -44,22 +44,25 @@ def main(args=None):
     args = parser.parse_args(args)
 
     input_file = None
-    if args.filename is None:  # read from stdin
-        input_file = tempfile.SpooledTemporaryFile()
-        input_file.write(sys.stdin.read())
+    try:
+        if args.filename is None:  # read from stdin
+            input_file = tempfile.SpooledTemporaryFile()
+            input_file.write(sys.stdin.read())
+            input_file.seek(0)
+        else:
+            input_file = open(args.filename, 'rb')
+
+        rows = []
+        # detect file type
+        dialect = csv.Sniffer().sniff(input_file.read(1024))
         input_file.seek(0)
-    else:
-        input_file = open(args.filename, 'rb')
+        csvreader = csv.reader(input_file, dialect)
 
-    rows = []
-    # detect file type
-    dialect = csv.Sniffer().sniff(input_file.read(1024))
-    input_file.seek(0)
-    csvreader = csv.reader(input_file, dialect)
-
-    # convert csv reader to rows
-    for row in csvreader:
-        rows.append(row)
+        # convert csv reader to rows
+        for row in csvreader:
+            rows.append(row)
+    finally:
+        input_file.close()
 
     app = GolumnApp(useBestVisual=True)
     app.LoadData(args.title or os.path.basename(args.filename or '-'), rows)
