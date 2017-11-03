@@ -1,0 +1,3 @@
+# Golumn build requirements
+wxPython
+py2app
