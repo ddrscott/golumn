@@ -57,7 +57,7 @@ def main():
     with open(file_name, 'rb') as csvfile:
 
         # detect file type
-        dialect = csv.Sniffer().sniff(csvfile.read(1024))
+        dialect = csv.Sniffer().sniff(csvfile.read(1024 * 50))
         csvfile.seek(0)
         csvreader = csv.reader(csvfile, dialect)
 

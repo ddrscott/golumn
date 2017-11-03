@@ -54,7 +54,7 @@ def main(args=None):
 
         rows = []
         # detect file type
-        dialect = csv.Sniffer().sniff(input_file.read(1024))
+        dialect = csv.Sniffer().sniff(input_file.read(1024 * 50))
         input_file.seek(0)
         csvreader = csv.reader(input_file, dialect)
 
