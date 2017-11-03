@@ -28,7 +28,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/pypa/golumn',
+    url='https://github.com/ddrscott/golumnpy',
 
     # Author details
     author='Scott Pierce',

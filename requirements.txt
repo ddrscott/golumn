@@ -1,3 +1,2 @@
 # Golumn build requirements
-wxPython
-py2app
+wxPython==4.0.0b2
