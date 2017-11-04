@@ -20,6 +20,10 @@ class GolumnFrame(wx.Frame):
 
         # setup File menu
         fileMenu = wx.Menu()
+        fileMenu.Append(wx.ID_OPEN, "&Open\tCtrl+O")
+        self.Bind(wx.EVT_MENU, self.on_open, id=wx.ID_OPEN)
+        fileMenu.AppendSeparator()
+
         fileMenu.Append(wx.ID_CLOSE, "&Close\tCtrl+W")
         self.Bind(wx.EVT_MENU, self.on_close, id=wx.ID_CLOSE)
         mb.Append(fileMenu, "&File")
@@ -35,6 +39,25 @@ class GolumnFrame(wx.Frame):
     def on_close(self, evt=None):
         self.Close()
         self.Destroy()
+
+    def on_open(self, evt=None):
+        dlg = wx.FileDialog(
+            self, message="Choose a file to open",
+            defaultDir=os.getcwd(),
+            defaultFile="",
+            wildcard="CSV Files (*.csv)|*.csv",
+            style=wx.FD_OPEN | wx.FD_CHANGE_DIR | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW
+            )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            paths = dlg.GetPaths()
+            path = paths[0]
+
+            with open(path, 'rb') as input_file:
+                title = os.path.basename(path)
+                wx.GetApp().LoadFile(title, input_file)
+
+        dlg.Destroy()
 
 
 class GolumnApp(wx.App):
