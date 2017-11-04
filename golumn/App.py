@@ -12,8 +12,17 @@ NewCopyEvent, EVT_COPY_EVENT = wx.lib.newevent.NewEvent()
 
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
+        rows = kw.pop('rows')
         wx.Frame.__init__(self, *args, **kw)
         self.MakeMenuBar()
+
+        # Setup the grid BEFORE the frame
+        grid = ArrayGrid.ArrayGrid(self, rows)
+        grid.SetRowLabelSize(len(str(len(rows))) * 10)
+        grid.Fit()
+
+        # force scrollbars to redraw
+        self.PostSizeEvent()
 
     def MakeMenuBar(self):
         mb = wx.MenuBar()
@@ -67,17 +76,9 @@ class GolumnApp(wx.App):
 
     def LoadData(self, title, rows):
         title_with_rows = '{} - rows: {:,}'.format(title, len(rows))
-        frm = GolumnFrame(None, title=title_with_rows, size=(640, 400))
+        frm = GolumnFrame(None, title=title_with_rows, size=(640, 400), rows=rows)
         frm.Centre()
         frm.Show()
-
-        # Setup the grid BEFORE the frame
-        grid = ArrayGrid.ArrayGrid(frm, rows)
-        grid.SetRowLabelSize(len(str(len(rows))) * 8)
-        grid.Fit()
-
-        # force scrollbars to redraw
-        frm.PostSizeEvent()
 
     def LoadFile(self, title, input_file):
         rows = []

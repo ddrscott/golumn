@@ -23,6 +23,34 @@ class ArrayGrid(wx.grid.Grid):
 
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
 
+        self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
+
+    def on_cell_right_click(self, evt=None):
+        if not hasattr(self, "evt_sort_a"):
+            self.evt_sort_a = wx.NewId()
+            self.evt_sort_z = wx.NewId()
+            self.Bind(wx.EVT_MENU, self.on_sort_a, id=self.evt_sort_a)
+            self.Bind(wx.EVT_MENU, self.on_sort_z, id=self.evt_sort_z)
+
+        self.SetGridCursor(evt.GetRow(), evt.GetCol())
+
+        # make a menu
+        menu = wx.Menu()
+        # Show how to put an icon in the menu
+        menu.Append(wx.MenuItem(menu, self.evt_sort_a, "Sort &A*..Z"))
+        menu.Append(wx.MenuItem(menu, self.evt_sort_z, "Sort &Z*..A"))
+
+        self.PopupMenu(menu)
+        menu.Destroy()
+
+    def on_sort_a(self, evt=None):
+        # self.SetSortingColumn(self.GetGridCursorCol(), ascending=True)
+        self.GetTable().SortColumn(self.GetGridCursorCol(), reverse=False)
+
+    def on_sort_z(self, evt=None):
+        # self.SetSortingColumn(self.GetGridCursorCol(), reverse=True)
+        self.GetTable().SortColumn(self.GetGridCursorCol(), reverse=True)
+
     def real_selection(self):
         """
         wxGrid selection is too flexible, we really just need these

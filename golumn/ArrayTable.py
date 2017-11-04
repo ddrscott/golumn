@@ -1,5 +1,5 @@
 import wx
-
+from operator import itemgetter
 
 SAMPLE_SIZE = 10
 
@@ -45,3 +45,6 @@ class ArrayTable(wx.grid.GridTableBase):
     def SetValue(self, row, col, value):
         self.data[row][col] = value
 
+    def SortColumn(self, col, reverse=False):
+        self.data = sorted(self.data, key=itemgetter(col), reverse=reverse)
+        self.GetView().ForceRefresh()
