@@ -48,7 +48,7 @@ class ArrayGrid(wx.grid.Grid):
         self.GetTable().SortColumn(self.GetGridCursorCol(), reverse=False)
 
     def on_sort_z(self, evt=None):
-        # self.SetSortingColumn(self.GetGridCursorCol(), reverse=True)
+        # self.SetSortingColumn(self.GetGridCursorCol(), ascending=False)
         self.GetTable().SortColumn(self.GetGridCursorCol(), reverse=True)
 
     def real_selection(self):
