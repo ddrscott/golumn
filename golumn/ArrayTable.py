@@ -1,3 +1,4 @@
+from copy import copy
 import wx
 from operator import itemgetter
 
@@ -12,6 +13,7 @@ class ArrayTable(wx.grid.GridTableBase):
         else:
             self.headers = headers
         self.data = data
+        self.original = self.data
         if len(self.data) > SAMPLE_SIZE:
             self.fakeLimit = SAMPLE_SIZE
             wx.CallLater(1, self.UnsetFakeLimit)
@@ -37,10 +39,16 @@ class ArrayTable(wx.grid.GridTableBase):
         return len(self.headers)
 
     def IsEmptyCell(self, row, col):
-        return not self.data[row][col]
+        try:
+            return not self.data[row][col]
+        except IndexError:
+            return True
 
     def GetValue(self, row, col):
-        return self.data[row][col]
+        try:
+            return self.data[row][col]
+        except IndexError:
+            return False
 
     def SetValue(self, row, col, value):
         self.data[row][col] = value
@@ -48,3 +56,29 @@ class ArrayTable(wx.grid.GridTableBase):
     def SortColumn(self, col, reverse=False):
         self.data = sorted(self.data, key=itemgetter(col), reverse=reverse)
         self.GetView().ForceRefresh()
+
+    def remove_filter(self):
+        grid = self.GetView()
+        grid.BeginBatch()
+        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
+        self.data = copy(self.original)
+        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
+        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
+        grid.EndBatch()
+        self.refresh_data()
+
+    def filter_by(self, col, value):
+        self.data = [row for row in self.data if row[col] == value]
+        grid = self.GetView()
+        grid.BeginBatch()
+        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.original)))
+        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
+        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
+        grid.EndBatch()
+        self.refresh_data()
+
+    def refresh_data(self):
+        grid = self.GetView()
+        grid.AdjustScrollbars()
+        grid.ForceRefresh()
+

@@ -29,16 +29,23 @@ class ArrayGrid(wx.grid.Grid):
         if not hasattr(self, "evt_sort_a"):
             self.evt_sort_a = wx.NewId()
             self.evt_sort_z = wx.NewId()
+            self.evt_filter_selection = wx.NewId()
+            self.evt_remove_filter = wx.NewId()
             self.Bind(wx.EVT_MENU, self.on_sort_a, id=self.evt_sort_a)
             self.Bind(wx.EVT_MENU, self.on_sort_z, id=self.evt_sort_z)
+            self.Bind(wx.EVT_MENU, self.on_filter_selection, id=self.evt_filter_selection)
+            self.Bind(wx.EVT_MENU, self.on_remove_filter, id=self.evt_remove_filter)
 
         self.SetGridCursor(evt.GetRow(), evt.GetCol())
 
         # make a menu
         menu = wx.Menu()
         # Show how to put an icon in the menu
-        menu.Append(wx.MenuItem(menu, self.evt_sort_a, "Sort &A*..Z"))
-        menu.Append(wx.MenuItem(menu, self.evt_sort_z, "Sort &Z*..A"))
+        menu.Append(wx.MenuItem(menu, self.evt_sort_a, "Sort &A..Z"))
+        menu.Append(wx.MenuItem(menu, self.evt_sort_z, "Sort &Z..A"))
+        menu.AppendSeparator()
+        menu.Append(wx.MenuItem(menu, self.evt_filter_selection, "Filter by &Selection"))
+        menu.Append(wx.MenuItem(menu, self.evt_remove_filter, "&Remove Filter"))
 
         self.PopupMenu(menu)
         menu.Destroy()
@@ -50,6 +57,13 @@ class ArrayGrid(wx.grid.Grid):
     def on_sort_z(self, evt=None):
         # self.SetSortingColumn(self.GetGridCursorCol(), ascending=False)
         self.GetTable().SortColumn(self.GetGridCursorCol(), reverse=True)
+
+    def on_filter_selection(self, evt=None):
+        value = self.GetCellValue(self.GetGridCursorRow(), self.GetGridCursorCol())
+        self.GetTable().filter_by(self.GetGridCursorCol(), value)
+
+    def on_remove_filter(self, evt=None):
+        self.GetTable().remove_filter()
 
     def real_selection(self):
         """
