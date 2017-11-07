@@ -13,3 +13,7 @@ task :release do
   sh 'python setup.py bdist_wheel'
   sh "twine upload dist/golumn-#{version}-py2-none-any.whl"
 end
+
+task :app do
+  sh 'python setup-app.py py2app'
+end
