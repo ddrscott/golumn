@@ -68,10 +68,10 @@ class ArrayTable(wx.grid.GridTableBase):
         self.refresh_data()
 
     def filter_by(self, col, value):
-        self.data = [row for row in self.data if row[col] == value]
         grid = self.GetView()
         grid.BeginBatch()
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.original)))
+        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
+        self.data = [row for row in self.data if row[col] == value]
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
         grid.EndBatch()

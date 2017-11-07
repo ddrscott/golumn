@@ -2,7 +2,6 @@ import csv
 import pickle
 import os
 import socket
-import sys
 import tempfile
 import threading
 import wx
@@ -19,6 +18,9 @@ NewCopyEvent, EVT_COPY_EVENT = wx.lib.newevent.NewEvent()
 
 HOST = 'localhost'
 PORT = 65430
+
+ID_FILTER_BY_SELECTION = wx.NewId()
+ID_REMOVE_FILTER = wx.NewId()
 
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
@@ -44,7 +46,6 @@ class GolumnFrame(wx.Frame):
         fileMenu.Append(wx.ID_EXECUTE, "&Debug Console\tCtrl+D")
         self.Bind(wx.EVT_MENU, self.on_debug, id=wx.ID_EXECUTE)
         fileMenu.AppendSeparator()
-
         fileMenu.Append(wx.ID_CLOSE, "&Close\tCtrl+W")
         self.Bind(wx.EVT_MENU, self.on_close, id=wx.ID_CLOSE)
         mb.Append(fileMenu, "&File")
@@ -53,6 +54,15 @@ class GolumnFrame(wx.Frame):
         editMenu = wx.Menu()
         editMenu.Append(wx.ID_COPY, "&Copy\tCtrl+C")
         mb.Append(editMenu, "&Edit")
+
+        # setup Edit menu
+        dataMenu = wx.Menu()
+        dataMenu.Append(wx.ID_SORT_ASCENDING, "Sort &A to Z\tShift+Ctrl+A")
+        dataMenu.Append(wx.ID_SORT_DESCENDING, "Sort &Z to A\tShift+Ctrl+Z")
+        dataMenu.Append(ID_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
+        dataMenu.AppendSeparator()
+        dataMenu.Append(ID_FILTER_BY_SELECTION, "&Filter by Selection\tShift+Ctrl+F")
+        mb.Append(dataMenu, "&Data")
 
         # finally assign it to the frame
         self.SetMenuBar(mb)

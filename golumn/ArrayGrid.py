@@ -4,6 +4,8 @@ import wx
 import ArrayTable
 import tempfile
 
+import App as App
+
 DEFAULT_COPY_DIALECT = 'excel-tab'
 
 
@@ -22,6 +24,10 @@ class ArrayGrid(wx.grid.Grid):
         self.DisableDragRowSize()
 
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
+        parent.Bind(wx.EVT_MENU, self.on_sort_a, id=wx.ID_SORT_ASCENDING)
+        parent.Bind(wx.EVT_MENU, self.on_sort_z, id=wx.ID_SORT_DESCENDING)
+        parent.Bind(wx.EVT_MENU, self.on_remove_filter, id=App.ID_REMOVE_FILTER)
+        parent.Bind(wx.EVT_MENU, self.on_filter_selection, id=App.ID_FILTER_BY_SELECTION)
 
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
 
@@ -45,7 +51,7 @@ class ArrayGrid(wx.grid.Grid):
         menu.Append(wx.MenuItem(menu, self.evt_sort_z, "Sort &Z..A"))
         menu.AppendSeparator()
         menu.Append(wx.MenuItem(menu, self.evt_filter_selection, "Filter by &Selection"))
-        menu.Append(wx.MenuItem(menu, self.evt_remove_filter, "&Remove Filter"))
+        menu.Append(wx.MenuItem(menu, self.evt_remove_filter, "&Remove Sort and Filter"))
 
         self.PopupMenu(menu)
         menu.Destroy()
