@@ -138,9 +138,14 @@ class GolumnApp(wx.App):
 
     def LoadData(self, title, rows):
         title_with_rows = '{} - rows: {:,}'.format(title, len(rows))
-        frm = GolumnFrame(None, title=title_with_rows, size=(640, 400), rows=rows)
+        # start window on the top, and demote it in the next cycle
+        frm = GolumnFrame(None, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP, title=title_with_rows, size=(640, 400), rows=rows)
         frm.Centre()
         frm.Show()
+
+        # allow the window to go away
+        frm.RequestUserAttention()
+        wx.CallLater(1, lambda: frm.ToggleWindowStyle(wx.STAY_ON_TOP))
 
     def LoadFile(self, title, input_file):
         rows = []
