@@ -59,26 +59,34 @@ class ArrayTable(wx.grid.GridTableBase):
 
     def remove_filter(self):
         grid = self.GetView()
+        col = grid.GetGridCursorCol()
+        row = grid.GetGridCursorRow()
+
         grid.BeginBatch()
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
         self.data = copy(self.original)
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
         grid.EndBatch()
-        self.refresh_data()
+        self.refresh_data(row, col)
 
     def filter_by(self, col, value):
         grid = self.GetView()
+        col = grid.GetGridCursorCol()
+        row = grid.GetGridCursorRow()
         grid.BeginBatch()
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
         self.data = [row for row in self.data if row[col] == value]
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
         grid.EndBatch()
-        self.refresh_data()
+        self.refresh_data(row, col)
 
-    def refresh_data(self):
+    def refresh_data(self, row, col):
+        """row, col -  where to try to put the cursor when we're done"""
         grid = self.GetView()
         grid.AdjustScrollbars()
         grid.ForceRefresh()
-
+        if row > len(self.data):
+            row = len(self.data) - 1
+        grid.SetGridCursor(row, col)

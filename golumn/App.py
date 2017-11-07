@@ -61,7 +61,7 @@ class GolumnFrame(wx.Frame):
         dataMenu.Append(wx.ID_SORT_DESCENDING, "Sort &Z to A\tShift+Ctrl+Z")
         dataMenu.Append(ID_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
         dataMenu.AppendSeparator()
-        dataMenu.Append(ID_FILTER_BY_SELECTION, "&Filter by Selection\tShift+Ctrl+F")
+        dataMenu.Append(ID_FILTER_BY_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
         mb.Append(dataMenu, "&Data")
 
         # finally assign it to the frame
