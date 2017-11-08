@@ -76,7 +76,7 @@ class ArrayTable(wx.grid.GridTableBase):
         row = grid.GetGridCursorRow()
         grid.BeginBatch()
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
-        self.data = [row for row in self.data if row[col] == value]
+        self.data = [r for r in self.data if r[col] == value]
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
         grid.EndBatch()
