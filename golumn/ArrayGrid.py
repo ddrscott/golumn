@@ -14,11 +14,15 @@ class ArrayGrid(wx.grid.Grid):
         wx.grid.Grid.__init__(self)
         self.Create(parent)
 
+        self.default_font_size = 12
+        self.font_size = 12.0
+
         # assign data adapter
         table = ArrayTable.ArrayTable(data=data)
         self.SetTable(table, True)
-        self.SetColLabelSize(20)
-        self.SetRowLabelSize(20)
+        self.SetColLabelSize(self.font_size + 8)
+        self.SetRowLabelSize(self.font_size + 8)
+        self.SetDefaultRowSize(self.font_size + 8)
         self.SetMargins(-10, -10)   # remove some whitespace, but leave enough for scrollbar overlap
         self.AutoSizeColumns(False)
         self.DisableDragRowSize()
@@ -28,8 +32,30 @@ class ArrayGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_sort_z, id=wx.ID_SORT_DESCENDING)
         parent.Bind(wx.EVT_MENU, self.on_remove_filter, id=App.ID_REMOVE_FILTER)
         parent.Bind(wx.EVT_MENU, self.on_filter_selection, id=App.ID_FILTER_BY_SELECTION)
+        parent.Bind(wx.EVT_MENU, self.on_zoom_in, id=wx.ID_ZOOM_IN)
+        parent.Bind(wx.EVT_MENU, self.on_zoom_out, id=wx.ID_ZOOM_OUT)
+        parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
 
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
+
+    def on_zoom_in(self, evt=None):
+        self.font_size = self.font_size * 1.1
+        self.reset_font()
+
+    def on_zoom_out(self, evt=None):
+        self.font_size = self.font_size / 1.1
+        self.reset_font()
+
+    def on_zoom_reset(self, evt=None):
+        self.font_size = self.default_font_size
+        self.reset_font()
+
+    def reset_font(self):
+        self.SetDefaultCellFont(wx.Font( wx.FontInfo(int(round(self.font_size)))))
+        # FIXME: This is really slow on large datasets.
+        #        We should remove non visible rows, AutoSize, then put them back.
+        self.AutoSize()
+        self.reset_view()
 
     def on_cell_right_click(self, evt=None):
         if not hasattr(self, "evt_sort_a"):
@@ -124,3 +150,8 @@ class ArrayGrid(wx.grid.Grid):
                 dlg = wx.MessageDialog(self, 'Could not open the clipboard for copying.\nUnknown error :(', 'Clipboard Error', wx.OK | wx.ICON_ERROR)
                 dlg.ShowModal()
                 dlg.Destroy()
+
+    def reset_view(self):
+        self.ForceRefresh()
+        self.GetParent().PostSizeEvent()
+

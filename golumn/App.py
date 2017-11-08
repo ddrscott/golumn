@@ -29,9 +29,9 @@ class GolumnFrame(wx.Frame):
         self.MakeMenuBar()
 
         # Setup the grid BEFORE the frame
-        grid = ArrayGrid.ArrayGrid(self, rows)
-        grid.SetRowLabelSize(len(str(len(rows))) * 10)
-        grid.Fit()
+        self.grid = ArrayGrid.ArrayGrid(self, rows)
+        self.grid.SetRowLabelSize(len(str(len(rows))) * 10)
+        self.grid.Fit()
 
         # force scrollbars to redraw
         self.PostSizeEvent()
@@ -63,6 +63,13 @@ class GolumnFrame(wx.Frame):
         dataMenu.AppendSeparator()
         dataMenu.Append(ID_FILTER_BY_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
         mb.Append(dataMenu, "&Data")
+
+        # setup Edit menu
+        viewMenu = wx.Menu()
+        viewMenu.Append(wx.ID_ZOOM_IN, "Zoom In\tCtrl++")
+        viewMenu.Append(wx.ID_ZOOM_OUT, "Zoom Out\tCtrl+-")
+        viewMenu.Append(wx.ID_ZOOM_100, "Zoom Reset\tCtrl+0")
+        mb.Append(viewMenu, "&View")
 
         # finally assign it to the frame
         self.SetMenuBar(mb)
