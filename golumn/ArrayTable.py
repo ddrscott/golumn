@@ -51,13 +51,13 @@ class ArrayTable(wx.grid.GridTableBase):
         try:
             return self.data[row][col]
         except IndexError:
-            return False
+            return None
 
     def SetValue(self, row, col, value):
         self.data[row][col] = value
 
     def SortColumn(self, col, reverse=False):
-        self.data = sorted(self.data, key=itemgetter(col), reverse=reverse)
+        self.data = sorted(self.data, key=lambda r: len(r) > col and r[col], reverse=reverse)
         self.GetView().ForceRefresh()
 
     def remove_filter(self):
