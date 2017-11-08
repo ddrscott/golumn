@@ -75,11 +75,10 @@ class ArrayTable(wx.grid.GridTableBase):
 
     def filter_by(self, col, value):
         grid = self.GetView()
-        col = grid.GetGridCursorCol()
         row = grid.GetGridCursorRow()
         grid.BeginBatch()
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
-        self.data = [r for r in self.data if r[col] == value]
+        self.data = [r for r in self.data if len(r) > col and r[col] == value]
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
         grid.EndBatch()

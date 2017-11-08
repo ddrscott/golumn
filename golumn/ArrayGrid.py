@@ -152,6 +152,7 @@ class ArrayGrid(wx.grid.Grid):
                 dlg.Destroy()
 
     def reset_view(self):
+        self.AdjustScrollbars()
         self.ForceRefresh()
         self.GetParent().PostSizeEvent()
 
