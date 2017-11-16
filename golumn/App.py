@@ -1,6 +1,7 @@
 import csv
 import pickle
 import os
+import platform
 import socket
 import tempfile
 import threading
@@ -8,7 +9,7 @@ import wx
 import wx.aui
 import wx.grid
 import wx.lib.newevent
-
+import wx.py.shell
 from wx.adv import TaskBarIcon as TaskBarIcon
 
 import ArrayGrid
@@ -21,6 +22,7 @@ PORT = 65430
 
 ID_FILTER_BY_SELECTION = wx.NewId()
 ID_REMOVE_FILTER = wx.NewId()
+ID_DEBUG_CONSOLE = wx.NewId()
 
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
@@ -43,8 +45,6 @@ class GolumnFrame(wx.Frame):
         fileMenu = wx.Menu()
         fileMenu.Append(wx.ID_OPEN, "&Open\tCtrl+O")
         self.Bind(wx.EVT_MENU, self.on_open, id=wx.ID_OPEN)
-        fileMenu.Append(wx.ID_EXECUTE, "&Debug Console\tCtrl+D")
-        self.Bind(wx.EVT_MENU, self.on_debug, id=wx.ID_EXECUTE)
         fileMenu.AppendSeparator()
         fileMenu.Append(wx.ID_CLOSE, "&Close\tCtrl+W")
         self.Bind(wx.EVT_MENU, self.on_close, id=wx.ID_CLOSE)
@@ -71,16 +71,19 @@ class GolumnFrame(wx.Frame):
         viewMenu.Append(wx.ID_ZOOM_100, "Zoom Reset\tCtrl+0")
         mb.Append(viewMenu, "&View")
 
+        if platform.system() == 'Darwin':
+            appleMenu = mb.OSXGetAppleMenu()
+            # Add menu above Quit
+            appleMenu.InsertSeparator(appleMenu.GetMenuItemCount() - 2)
+            appleMenu.Insert(appleMenu.GetMenuItemCount() - 2, ID_DEBUG_CONSOLE, "Debug Console\tCtrl+D")
+            self.Bind(wx.EVT_MENU, self.on_debug, id=ID_DEBUG_CONSOLE)
+
         # finally assign it to the frame
         self.SetMenuBar(mb)
 
     def on_debug(self, evt=None):
-        def binding_pry():
-            import code
-            code.interact(local=dict(globals(), **locals()))
-
-        t = threading.Thread(target=binding_pry)
-        t.start()
+        shell = wx.py.shell.ShellFrame(locals=dict(globals(), **locals()))
+        shell.Show()
 
     def on_close(self, evt=None):
         self.Close()
