@@ -19,13 +19,14 @@ ID_DEBUG_CONSOLE = wx.NewId()
 
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
-        rows = kw.pop('rows')
+        self.rows = kw.pop('rows')
         wx.Frame.__init__(self, *args, **kw)
         self.MakeMenuBar()
+        self.MakeStatusBar()
 
         # Setup the grid BEFORE the frame
-        self.grid = ArrayGrid.ArrayGrid(self, rows)
-        self.grid.SetRowLabelSize(len(str(len(rows))) * 10)
+        self.grid = ArrayGrid.ArrayGrid(self, self.rows)
+        self.grid.SetRowLabelSize(len(str(len(self.rows))) * 12)
         self.grid.Fit()
 
         # force scrollbars to redraw
@@ -67,6 +68,14 @@ class GolumnFrame(wx.Frame):
         # finally assign it to the frame
         self.SetMenuBar(mb)
 
+    def MakeStatusBar(self):
+        rowLabel = 'rows: {:,}'.format(len(self.rows))
+        sb = wx.StatusBar(self, -1)
+        sb.SetFieldsCount(3)
+        sb.SetStatusWidths([-2, 1, 8 * len(rowLabel)])
+        sb.SetStatusText(rowLabel, 2)
+        self.SetStatusBar(sb)
+
     def on_close(self, evt=None):
         self.Close()
         self.Destroy()
@@ -107,9 +116,8 @@ class GolumnApp(wx.App):
         return wx.App.OnExit(self)
 
     def LoadData(self, title, rows):
-        title_with_rows = '{} - rows: {:,}'.format(title, len(rows))
         # start window on the top, and demote it in the next cycle
-        frm = GolumnFrame(None, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP, title=title_with_rows, size=(640, 400), rows=rows)
+        frm = GolumnFrame(None, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP, title=title, size=(640, 400), rows=rows)
         frm.Centre()
         frm.Show()
 
