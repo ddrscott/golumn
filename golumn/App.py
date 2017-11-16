@@ -1,21 +1,13 @@
 import csv
 import pickle
 import os
-import platform
 import socket
 import tempfile
 import threading
 import wx
-import wx.aui
 import wx.grid
-import wx.lib.newevent
-import wx.py.shell
-from wx.adv import TaskBarIcon as TaskBarIcon
 
 import ArrayGrid
-import golumn.images as images
-
-NewCopyEvent, EVT_COPY_EVENT = wx.lib.newevent.NewEvent()
 
 HOST = 'localhost'
 PORT = 65430
@@ -23,6 +15,7 @@ PORT = 65430
 ID_FILTER_BY_SELECTION = wx.NewId()
 ID_REMOVE_FILTER = wx.NewId()
 ID_DEBUG_CONSOLE = wx.NewId()
+
 
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
@@ -71,19 +64,8 @@ class GolumnFrame(wx.Frame):
         viewMenu.Append(wx.ID_ZOOM_100, "Zoom Reset\tCtrl+0")
         mb.Append(viewMenu, "&View")
 
-        if platform.system() == 'Darwin':
-            appleMenu = mb.OSXGetAppleMenu()
-            # Add menu above Quit
-            appleMenu.InsertSeparator(appleMenu.GetMenuItemCount() - 2)
-            appleMenu.Insert(appleMenu.GetMenuItemCount() - 2, ID_DEBUG_CONSOLE, 'Debug Console')
-            self.Bind(wx.EVT_MENU, self.on_debug, id=ID_DEBUG_CONSOLE)
-
         # finally assign it to the frame
         self.SetMenuBar(mb)
-
-    def on_debug(self, evt=None):
-        shell = wx.py.shell.ShellFrame(locals=dict(globals(), **locals()))
-        shell.Show()
 
     def on_close(self, evt=None):
         self.Close()
@@ -111,27 +93,6 @@ class GolumnFrame(wx.Frame):
         dlg.Destroy()
 
 
-class MyTaskBarIcon(TaskBarIcon):
-    def __init__(self, frame):
-        TaskBarIcon.__init__(self, wx.adv.TBI_DOCK)
-        self.frame = frame
-
-        # Set the image
-        icon = self.MakeIcon(images.AppIcon.GetImage())
-        self.SetIcon(icon, "Golumn")
-
-    def MakeIcon(self, img):
-        if "wxMSW" in wx.PlatformInfo:
-            img = img.Scale(16, 16)
-        elif "wxGTK" in wx.PlatformInfo:
-            img = img.Scale(22, 22)
-        else:
-            img = img.Scale(128, 128)
-        # wxMac can be any size upto 128x128, so leave the source img alone....
-        icon = wx.Icon(img.ConvertToBitmap())
-        return icon
-
-
 class GolumnApp(wx.App):
     def OnInit(self):
         self.SetAppName('Golumn')
@@ -139,7 +100,6 @@ class GolumnApp(wx.App):
             return False
         else:
             self.SocketServer()
-        self.task_bar_icon = MyTaskBarIcon(self)
         return True
 
     def OnExit(self):
