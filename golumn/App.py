@@ -75,7 +75,7 @@ class GolumnFrame(wx.Frame):
             appleMenu = mb.OSXGetAppleMenu()
             # Add menu above Quit
             appleMenu.InsertSeparator(appleMenu.GetMenuItemCount() - 2)
-            appleMenu.Insert(appleMenu.GetMenuItemCount() - 2, ID_DEBUG_CONSOLE, "Debug Console\tCtrl+D")
+            appleMenu.Insert(appleMenu.GetMenuItemCount() - 2, ID_DEBUG_CONSOLE, 'Debug Console')
             self.Bind(wx.EVT_MENU, self.on_debug, id=ID_DEBUG_CONSOLE)
 
         # finally assign it to the frame
