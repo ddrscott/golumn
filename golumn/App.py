@@ -1,6 +1,7 @@
 import csv
 import pickle
 import os
+import sys
 import socket
 import tempfile
 import threading
@@ -127,9 +128,17 @@ class GolumnApp(wx.App):
 
     def LoadFile(self, title, input_file):
         rows = []
-        # detect file type
-        dialect = csv.Sniffer().sniff(input_file.read(1024 * 50))
-        input_file.seek(0)
+        try:
+            # detect file type
+            dialect = csv.Sniffer().sniff(input_file.read(1024 * 50))
+            input_file.seek(0)
+        except Exception as err:
+            wx.MessageBox(
+                err.message,
+                caption='Error opening file'
+                )
+            sys.exit(1)
+
         csvreader = csv.reader(input_file, dialect)
 
         # convert csv reader to rows
