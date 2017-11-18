@@ -118,7 +118,7 @@ class GolumnApp(wx.App):
 
     def LoadData(self, title, rows):
         # start window on the top, and demote it in the next cycle
-        frm = GolumnFrame(None, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP, title=title, size=(640, 400), rows=rows)
+        frm = GolumnFrame(None, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP, title=title, size=(1024, 600), rows=rows)
         frm.Centre()
         frm.Show()
 
