@@ -25,8 +25,8 @@ class ArrayGrid(wx.grid.Grid):
         self.SetRowLabelSize(self.font_size + 8)
         self.SetDefaultRowSize(self.font_size + 8)
         self.SetMargins(-10, -10)   # remove some whitespace, but leave enough for scrollbar overlap
-        self.AutoSizeColumns(False)
         self.DisableDragRowSize()
+        self.reset_font()
 
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
         parent.Bind(wx.EVT_MENU, self.on_sort_a, id=wx.ID_SORT_ASCENDING)
