@@ -13,6 +13,7 @@ class ArrayGrid(wx.grid.Grid):
     def __init__(self, parent, data):
         wx.grid.Grid.__init__(self)
         self.Create(parent)
+        self.EnableEditing(False)
 
         self.default_font_size = 12
         self.font_size = 12.0
