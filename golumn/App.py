@@ -1,6 +1,7 @@
 import csv
 import pickle
 import os
+import re
 import sys
 import socket
 import tempfile
@@ -23,6 +24,7 @@ class GolumnFrame(wx.Frame):
         self.rows = kw.pop('rows')
         wx.Frame.__init__(self, *args, **kw)
         self.MakeMenuBar()
+        self.MakeToolBar()
         self.MakeStatusBar()
 
         # Setup the grid BEFORE the frame
@@ -52,6 +54,9 @@ class GolumnFrame(wx.Frame):
 
         # setup Edit menu
         dataMenu = wx.Menu()
+        dataMenu.Append(wx.ID_FIND, "&Find\tCtrl+F")
+        self.Bind(wx.EVT_MENU, self.on_find, id=wx.ID_FIND)
+        dataMenu.AppendSeparator()
         dataMenu.Append(wx.ID_SORT_ASCENDING, "Sort &A to Z\tShift+Ctrl+A")
         dataMenu.Append(wx.ID_SORT_DESCENDING, "Sort &Z to A\tShift+Ctrl+Z")
         dataMenu.Append(ID_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
@@ -69,6 +74,28 @@ class GolumnFrame(wx.Frame):
         # finally assign it to the frame
         self.SetMenuBar(mb)
 
+    def MakeToolBar(self):
+        TBFLAGS = (wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT)
+        tb = self.CreateToolBar(TBFLAGS)
+        tb.AddStretchableSpace()
+        self.cbLive = wx.CheckBox(tb, -1, "Live")
+        self.cbLive.SetValue(True)
+        self.cbRegexp = wx.CheckBox(tb, -1, "Regexp")
+        self.cbRegexp.SetValue(True)
+        self.search = wx.ComboBox(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
+
+        tb.AddControl(self.cbLive)
+        tb.AddControl(self.cbRegexp)
+        tb.AddControl(self.search)
+        self.Bind(wx.EVT_CHECKBOX, self.on_live_toggle, self.cbLive)
+        self.Bind(wx.EVT_CHECKBOX, self.on_filter_key, self.cbRegexp)
+
+        self.search.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+        self.search.Bind(wx.EVT_TEXT_ENTER, self.on_filter_key)
+        self.search.Bind(wx.EVT_TEXT, self.on_filter_key)
+
+        tb.Realize()
+
     def MakeStatusBar(self):
         rowLabel = 'rows: {:,}'.format(len(self.rows))
         sb = wx.StatusBar(self, -1)
@@ -76,6 +103,38 @@ class GolumnFrame(wx.Frame):
         sb.SetStatusWidths([-2, 1, 8 * len(rowLabel)])
         sb.SetStatusText(rowLabel, 2)
         self.SetStatusBar(sb)
+
+    def on_find(self, evt):
+        self.search.SetFocus()
+        self.search.SelectAll()
+
+    def on_key_down(self, evt=None):
+        """
+        For some reason, CMD-A for select all is ignored by children of
+        TextCtrl eventhough TextCtrl supports it be default. Super annoying.
+        This handler fixes it for us.
+        """
+        keycode = evt.GetKeyCode()
+        if keycode == 65 and evt.ControlDown():
+            self.search.SelectAll()
+        evt.Skip()
+
+    def on_live_toggle(self, evt=None):
+        if self.cbLive.Value:
+            self.search.Bind(wx.EVT_TEXT, self.on_filter_key)
+            self.grid.fuzzy_filter(self.search.Value, regexp=self.cbRegexp.Value)
+        else:
+            self.search.Unbind(wx.EVT_TEXT)
+
+    def on_filter_key(self, evt=None):
+        if len(self.search.Value) > 0:
+            if self.cbRegexp.Value:
+                regexp = re.compile(self.search.Value, flags=re.IGNORECASE)
+            else:
+                regexp = re.compile(".*%s" % self.search.Value, flags=re.IGNORECASE)
+            self.grid.fuzzy_filter(regexp)
+        else:
+            self.grid.on_remove_filter(evt)
 
     def on_close(self, evt=None):
         self.Close()

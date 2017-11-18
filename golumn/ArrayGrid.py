@@ -98,6 +98,9 @@ class ArrayGrid(wx.grid.Grid):
     def on_remove_filter(self, evt=None):
         self.GetTable().remove_filter()
 
+    def fuzzy_filter(self, *args, **kw):
+        self.GetTable().fuzzy_filter(*args, **kw)
+
     def real_selection(self):
         """
         wxGrid selection is too flexible, we really just need these
