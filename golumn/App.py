@@ -6,10 +6,11 @@ import sys
 import socket
 import tempfile
 import threading
+import traceback
 import wx
 import wx.grid
 
-import ArrayGrid
+from golumn.CSVGrid import CSVGrid
 
 HOST = 'localhost'
 PORT = 65430
@@ -21,19 +22,48 @@ ID_DEBUG_CONSOLE = wx.NewId()
 
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
-        self.rows = kw.pop('rows')
+        self.src = kw.pop('src')
+
         wx.Frame.__init__(self, *args, **kw)
         self.MakeMenuBar()
         self.MakeToolBar()
         self.MakeStatusBar()
 
-        # Setup the grid BEFORE the frame
-        self.grid = ArrayGrid.ArrayGrid(self, self.rows)
-        self.grid.SetRowLabelSize(len(str(len(self.rows))) * 12)
+        try:
+            # Setup the grid BEFORE the frame
+            self.grid = CSVGrid(self, self.src)
+        except Exception as err:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stdout)
+            wx.MessageBox("{0}".format(err), caption="Could not open source")
+            self.Close()
+            return
+
+        # self.grid.SetRowLabelSize(len(str(len(self.rows))) * 12)
         self.grid.Fit()
 
         # force scrollbars to redraw
         self.PostSizeEvent()
+
+    # def MakeGrid(self):
+
+    #     rows = []
+    #     try:
+    #         # detect file type
+    #         dialect = csv.Sniffer().sniff(input_file.read(1024 * 50))
+    #         input_file.seek(0)
+    #     except Exception as err:
+    #         wx.MessageBox(
+    #                 err.message,
+    #                 caption='Error opening file'
+    #                 )
+    #         sys.exit(1)
+
+    #     csvreader = csv.reader(input_file, dialect)
+
+    #     # convert csv reader to rows
+    #     for row in csvreader:
+    #         rows.append(row)
 
     def MakeMenuBar(self):
         mb = wx.MenuBar()
@@ -97,6 +127,7 @@ class GolumnFrame(wx.Frame):
         tb.Realize()
 
     def MakeStatusBar(self):
+        return
         rowLabel = 'rows: {:,}'.format(len(self.rows))
         sb = wx.StatusBar(self, -1)
         sb.SetFieldsCount(3)
@@ -186,6 +217,7 @@ class GolumnApp(wx.App):
         wx.CallLater(1, lambda: frm.ToggleWindowStyle(wx.STAY_ON_TOP))
 
     def LoadFile(self, title, input_file):
+
         rows = []
         try:
             # detect file type
@@ -211,8 +243,24 @@ class GolumnApp(wx.App):
             title = title or os.path.basename(file_path)
             self.LoadFile(title, src)
 
+    def OpenPath(self, title, file_path):
+        # start window on the top, and demote it in the next cycle
+        frm = GolumnFrame(None,
+                          style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP,
+                          title=title,
+                          size=(1024, 600),
+                          src=file_path,
+                          )
+        frm.Centre()
+        frm.Show()
+
+        # bounce app icon
+        frm.RequestUserAttention()
+        # allow the window to go away
+        wx.CallLater(1, lambda: frm.ToggleWindowStyle(wx.STAY_ON_TOP))
+
     def LoadPackage(self, args):
-        wx.CallAfter(self.LoadPath, args.title, args.filename)
+        wx.CallAfter(self.OpenPath, args.title, args.filename)
 
     def CheckServer(self):
         try:

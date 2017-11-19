@@ -66,9 +66,7 @@ def send_server(args):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((HOST, PORT))
 
-        package = {'args': args, 'data': None}
-        if not args.filename:
-            package['data'] = sys.stdin.read()
+        package = {'args': args}
         s.sendall(pickle.dumps(package))
         s.close()
         return True
@@ -94,6 +92,6 @@ def main(args=None):
     # we must be the first instance, start it up
     app = GolumnApp(useBestVisual=True)
     title = args.title or os.path.basename(args.filename or '-')
-    app.LoadPath(title, args.filename)
+    app.OpenPath(title, args.filename)
     app.MainLoop()
     return 0
