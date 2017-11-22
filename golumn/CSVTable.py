@@ -3,7 +3,6 @@ import csv
 import tempfile
 import threading
 import wx
-from pandas import read_csv
 
 SAMPLE_SIZE = 100
 
