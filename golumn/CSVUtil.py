@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pandas import read_csv
 import threading
 
@@ -35,7 +36,7 @@ def blocks(files, size=65536):
         yield b
 
 with open("file", "r") as f:
-    print sum(bl.count("\n") for bl in blocks(f))
+    print(sum(bl.count("\n") for bl in blocks(f)))
 
 
 chunks = read_csv("/Users/scott.pierce/code/golumn/tmp/data_10m.csv",

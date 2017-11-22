@@ -1,3 +1,4 @@
+from __future__ import print_function
 import csv
 import tempfile
 import threading
@@ -36,11 +37,11 @@ class CSVTable(wx.grid.GridTableBase):
         self.line_index = None
 
         def build_line_index():
-            print "build_line_count: started"
+            print("build_line_count: started")
             self.line_index = line_index(self.src)
             if self.first_line_header:
                 self.line_index.pop(0)
-            print "build_line_count: finished. size: %i" % len(self.line_index)
+            print("build_line_count: finished. size: %i" % len(self.line_index))
             wx.CallAfter(self.on_line_index)
 
         t = threading.Thread(target=build_line_index)
@@ -133,7 +134,7 @@ class CSVTable(wx.grid.GridTableBase):
             else:
                 csvreader = csv.reader([line])
 
-            row = csvreader.next()
+            row = next(csvreader)
             return row[col]
         except Exception:
             import sys, traceback
@@ -141,7 +142,7 @@ class CSVTable(wx.grid.GridTableBase):
             traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stdout)
             return None
 
-        print row[col]
+        print(row[col])
         return None
         # self.data.append(row)
         return row[col]
@@ -162,8 +163,8 @@ class CSVTable(wx.grid.GridTableBase):
         else:
             csvreader = csv.reader([line])
 
-        row = csvreader.next()
-        print row[col]
+        row = next(csvreader)
+        print(row[col])
         return None
         # self.data.append(row)
         return row[col]

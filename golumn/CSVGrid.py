@@ -1,10 +1,12 @@
+from __future__ import division
+from __future__ import absolute_import
 import csv
 import re
 import wx
 import tempfile
 
 from golumn.CSVTable import CSVTable
-import App as App
+from . import App as App
 
 DEFAULT_COPY_DIALECT = 'excel-tab'
 
