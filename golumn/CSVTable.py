@@ -13,10 +13,12 @@ class CSVTable(wx.grid.GridTableBase):
         wx.grid.GridTableBase.__init__(self)
 
         self.headers = headers
-        self.src_file = open(src, "r")
+        self.src_file = open(src, 'r')
         self.dialect = 'excel'
         self.data = list()
         self.csv_reader = self.build_csvreader(self.src_file)
+        # Leave blank until this is finished loading
+        self.original = None
 
         for i in range(0, SAMPLE_ROWS):
             row = next(self.csv_reader)
@@ -35,6 +37,7 @@ class CSVTable(wx.grid.GridTableBase):
         wx.CallLater(1, lambda: threading.Thread(target=self.load_data_bg).start())
 
     def load_data_bg(self):
+        start = time.time()
         tick = time.time()
         added = 0
         for row in self.csv_reader:
@@ -44,8 +47,9 @@ class CSVTable(wx.grid.GridTableBase):
                 tick = time.time()
                 wx.CallAfter(self.notify_grid_added, added)
                 added = 0
-
+        print('total time: ', time.time() - start)
         wx.CallAfter(self.notify_grid_added, added)
+        
 
     def notify_grid_added(self, added):
         grid = self.GetView()
@@ -56,6 +60,7 @@ class CSVTable(wx.grid.GridTableBase):
         grid.AdjustScrollbars()
 
     def build_csvreader(self, src_file):
+        # reader = csv.reader(iter(m.readline, ""))
         sample = src_file.read(SAMPLE_BYTES)
         src_file.seek(0)
         try:

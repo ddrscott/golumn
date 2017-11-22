@@ -83,7 +83,7 @@ def main(args=None):
     # when no file is passed in. Assume use is piping in the data.
     if args.filename is None:
         args.filename = new_hist_file()
-        with open(args.filename, 'w+b') as dst:
+        with open(args.filename, 'w+') as dst:
             dst.write(sys.stdin.read())
 
     if send_server(args):
