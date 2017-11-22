@@ -49,7 +49,7 @@ class CSVTable(wx.grid.GridTableBase):
         t.start()
 
     def sample_data(self):
-        with tempfile.TemporaryFile() as tmp:
+        with tempfile.TemporaryFile('w+') as tmp:
             lines = 0
             with open(self.src, "r") as src_file:
                 for line in src_file:
@@ -92,7 +92,7 @@ class CSVTable(wx.grid.GridTableBase):
                 )
         grid.EndBatch()
         self.refresh_data(row, col)
-        self.src_file = open(self.src, 'rb')
+        self.src_file = open(self.src, 'r')
 
     # Called when the grid needs to display labels
     def GetColLabelValue(self, col):
