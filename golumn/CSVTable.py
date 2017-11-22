@@ -1,30 +1,29 @@
 from __future__ import print_function
 import csv
-import tempfile
+import time
 import threading
 import wx
 
-SAMPLE_SIZE = 100
-
-
-def line_index(src):
-    counts = list()
-    offset = 0
-    with open(src, "r") as f:
-        for line in f:
-            size = len(line)
-            offset += size
-            counts.append((size, offset))
-    return counts
+SAMPLE_BYTES = 1024 * 64
+SAMPLE_ROWS = 100
 
 
 class CSVTable(wx.grid.GridTableBase):
     def __init__(self, src=None, headers=None):
         wx.grid.GridTableBase.__init__(self)
 
-        self.src = src
         self.headers = headers
-        self.data = self.sample_data()
+        self.src_file = open(src, "r")
+        self.dialect = 'excel'
+        self.data = list()
+        self.csv_reader = self.build_csvreader(self.src_file)
+
+        for i in range(0, SAMPLE_ROWS):
+            row = next(self.csv_reader)
+            if row:
+                self.data.append(row)
+            else:
+                break
 
         if headers is None:
             self.first_line_header = True
@@ -33,73 +32,45 @@ class CSVTable(wx.grid.GridTableBase):
             self.first_line_header = False
             self.headers = headers
 
-        self.line_index = None
+        wx.CallLater(1, lambda: threading.Thread(target=self.load_data_bg).start())
 
-        def build_line_index():
-            print("build_line_count: started")
-            self.line_index = line_index(self.src)
-            if self.first_line_header:
-                self.line_index.pop(0)
-            print("build_line_count: finished. size: %i" % len(self.line_index))
-            wx.CallAfter(self.on_line_index)
+    def load_data_bg(self):
+        tick = time.time()
+        added = 0
+        for row in self.csv_reader:
+            added += 1
+            self.data.append(row)
+            if (time.time() - tick) > 0.5:
+                tick = time.time()
+                wx.CallAfter(self.notify_grid_added, added)
+                added = 0
 
-        t = threading.Thread(target=build_line_index)
-        t.setDaemon(True)
-        t.start()
+        wx.CallAfter(self.notify_grid_added, added)
 
-    def sample_data(self):
-        with tempfile.TemporaryFile('w+') as tmp:
-            lines = 0
-            with open(self.src, "r") as src_file:
-                for line in src_file:
-                    lines += 1
-                    tmp.write(line)
-                    if lines >= SAMPLE_SIZE:
-                        break
-            tmp.seek(0)
-
-            sniff = tmp.read()
-            tmp.seek(0)
-            sample = list()
-            csvreader = None
-            self.dialect = None
-            try:
-                # detect file type
-                self.dialect = csv.Sniffer().sniff(sniff)
-                csvreader = csv.reader(tmp, self.dialect)
-            except Exception:
-                wx.MessageBox('Setting to comman', caption='Could not delimiter')
-                csvreader = csv.reader(tmp)
-
-            # convert csv reader to rows
-            for row in csvreader:
-                sample.append(row)
-        return sample
-
-    def on_line_index(self):
+    def notify_grid_added(self, added):
         grid = self.GetView()
-        col = grid.GetGridCursorCol()
-        row = grid.GetGridCursorRow()
-        grid.SetRowLabelSize(len(str(self.GetNumberRows())) * 8 + 8)
+        grid.SetRowLabelSize(len(str(len(self.data))) * 8 + 8)
         grid.BeginBatch()
-        grid.ProcessTableMessage(
-                wx.grid.GridTableMessage(
-                    self,
-                    wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED,
-                    len(self.line_index) - len(self.data)
-                    )
-                )
+        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, added))
         grid.EndBatch()
-        self.refresh_data(row, col)
-        self.src_file = open(self.src, 'r')
+        grid.AdjustScrollbars()
+
+    def build_csvreader(self, src_file):
+        sample = src_file.read(SAMPLE_BYTES)
+        src_file.seek(0)
+        try:
+            # detect file type
+            self.dialect = csv.Sniffer().sniff(sample)
+        except Exception as err:
+            wx.MessageBox("Error: {0}\n\nSetting to comma and double quote.".format(err), caption='Could not CSV dialect')
+
+        return csv.reader(src_file, self.dialect)
 
     # Called when the grid needs to display labels
     def GetColLabelValue(self, col):
         return self.headers[col]
 
     def GetNumberRows(self):
-        if self.line_index:
-            return len(self.line_index)
         return len(self.data)
 
     def GetNumberCols(self):
@@ -112,62 +83,7 @@ class CSVTable(wx.grid.GridTableBase):
         try:
             return self.data[row][col]
         except IndexError:
-            return self.get_value_from_src(row, col)
-
-    def get_value_from_src(self, row, col):
-        line = None
-        size, offset = self.line_index[row]
-        self.src_file.seek(offset)
-        line = self.src_file.read(size)
-        line = line.rstrip()
-
-        # try:
-        #     return line.split(',')[col]
-        # except IndexError:
-        #     return None
-
-        try:
-            csvreader = None
-            if self.dialect:
-                csvreader = csv.reader([line], self.dialect)
-            else:
-                csvreader = csv.reader([line])
-
-            row = next(csvreader)
-            return row[col]
-        except Exception:
-            import sys, traceback
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stdout)
             return None
-
-        print(row[col])
-        return None
-        # self.data.append(row)
-        return row[col]
-
-    def get_value_from_src_bak(self, row, col):
-        line = None
-        with open(self.src, 'r') as f:
-            size, offset = self.line_index[row]
-            f.seek(offset)
-            line = f.read(size)
-        line = line.rstrip()
-
-        return line.split(',')[col]
-
-        csvreader = None
-        if self.dialect:
-            csvreader = csv.reader([line], self.dialect)
-        else:
-            csvreader = csv.reader([line])
-
-        row = next(csvreader)
-        print(row[col])
-        return None
-        # self.data.append(row)
-        return row[col]
-
 
     def SetValue(self, row, col, value):
         self.data[row][col] = value
