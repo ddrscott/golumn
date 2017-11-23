@@ -32,38 +32,14 @@ class GolumnFrame(wx.Frame):
         try:
             # Setup the grid BEFORE the frame
             self.grid = CSVGrid(self, self.src)
+            self.grid.Fit()
+            self.PostSizeEvent()
         except Exception as err:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stdout)
             wx.MessageBox("{0}".format(err), caption="Could not open source")
             self.Close()
             return
-
-        # self.grid.SetRowLabelSize(len(str(len(self.rows))) * 12)
-        self.grid.Fit()
-
-        # force scrollbars to redraw
-        self.PostSizeEvent()
-
-    # def MakeGrid(self):
-
-    #     rows = []
-    #     try:
-    #         # detect file type
-    #         dialect = csv.Sniffer().sniff(input_file.read(1024 * 50))
-    #         input_file.seek(0)
-    #     except Exception as err:
-    #         wx.MessageBox(
-    #                 err.message,
-    #                 caption='Error opening file'
-    #                 )
-    #         sys.exit(1)
-
-    #     csvreader = csv.reader(input_file, dialect)
-
-    #     # convert csv reader to rows
-    #     for row in csvreader:
-    #         rows.append(row)
 
     def MakeMenuBar(self):
         mb = wx.MenuBar()
@@ -127,13 +103,14 @@ class GolumnFrame(wx.Frame):
         tb.Realize()
 
     def MakeStatusBar(self):
-        return
-        rowLabel = 'rows: {:,}'.format(len(self.rows))
-        sb = wx.StatusBar(self, -1)
-        sb.SetFieldsCount(3)
-        sb.SetStatusWidths([-2, 1, 8 * len(rowLabel)])
-        sb.SetStatusText(rowLabel, 2)
-        self.SetStatusBar(sb)
+        self.sb = wx.StatusBar(self, -1)
+        self.sb.SetFieldsCount(3)
+        self.SetStatusBar(self.sb)
+
+    def status_row_count(self, count):
+        rowLabel = 'rows: {:,}'.format(count)
+        self.sb.SetStatusWidths([-2, 1, 8 * len(rowLabel)])
+        self.sb.SetStatusText(rowLabel, 2)
 
     def on_find(self, evt):
         self.search.SetFocus()

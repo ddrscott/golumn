@@ -57,10 +57,11 @@ class CSVTable(wx.grid.GridTableBase):
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, added))
         grid.EndBatch()
         grid.AdjustScrollbars()
+        grid.GetParent().status_row_count(len(self.data))
 
     def build_csvreader(self, src_file):
         # reader = csv.reader(iter(m.readline, ""))
-        sample = src_file.read(SAMPLE_BYTES).decode('utf-8')
+        sample = src_file.read(SAMPLE_BYTES)
         src_file.seek(0)
         try:
             # detect file type
