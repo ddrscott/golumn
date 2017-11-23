@@ -132,13 +132,14 @@ class CSVGrid(wx.grid.Grid):
             top, bottom = self.GetGridCursorRow(), self.GetGridCursorRow()+1
             left, right = self.GetGridCursorCol(), self.GetGridCursorCol()+1
 
-        return [top, bottom, left, right]
+        single = (top == bottom - 1) and (left == right - 1)
+        return [top, bottom, left, right, single]
 
     def on_copy(self, evt):
         with tempfile.TemporaryFile('w+') as file:
             writer = csv.writer(file, dialect=DEFAULT_COPY_DIALECT)
 
-            top, bottom, left, right = self.real_selection()
+            top, bottom, left, right, single_cell = self.real_selection()
 
             for r in range(top, bottom):
                 row = []
@@ -150,7 +151,10 @@ class CSVGrid(wx.grid.Grid):
 
             if wx.TheClipboard.Open():
                 clipData = wx.TextDataObject()
-                clipData.SetText(file.read())
+                if single_cell:
+                    clipData.SetText(file.read().strip())
+                else:
+                    clipData.SetText(file.read())
                 wx.TheClipboard.SetData(clipData)
                 wx.TheClipboard.Close()
             else:
