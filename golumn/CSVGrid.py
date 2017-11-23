@@ -119,18 +119,18 @@ class CSVGrid(wx.grid.Grid):
             #     GridCellCoordsArray: [GridCellCoords(2, 0)]
             # https://groups.google.com/forum/#!topic/wxpython-dev/Isw1L5_i6po
             top, left = map(int, re.findall('\d+', str(self.GetSelectionBlockTopLeft())))
-            bottom, right = map(lambda x: int(x)+1, re.findall('\d+', str(self.GetSelectionBlockBottomRight())))
+            bottom, right = map(lambda x: int(x) + 1, re.findall('\d+', str(self.GetSelectionBlockBottomRight())))
         elif self.GetSelectedCols():
             top = 0
             bottom = self.GetNumberRows()
-            left, right = self.GetSelectedCols()[0], self.GetSelectedCols()[-1]+1
+            left, right = self.GetSelectedCols()[0], self.GetSelectedCols()[-1] + 1
         elif self.GetSelectedRows():
-            top, bottom = self.GetSelectedRows()[0], self.GetSelectedRows()[-1]+1
+            top, bottom = self.GetSelectedRows()[0], self.GetSelectedRows()[-1] + 1
             left = 0
             right = self.GetNumberCols()
         else:
-            top, bottom = self.GetGridCursorRow(), self.GetGridCursorRow()+1
-            left, right = self.GetGridCursorCol(), self.GetGridCursorCol()+1
+            top, bottom = self.GetGridCursorRow(), self.GetGridCursorRow() + 1
+            left, right = self.GetGridCursorCol(), self.GetGridCursorCol() + 1
 
         single = (top == bottom - 1) and (left == right - 1)
         return [top, bottom, left, right, single]

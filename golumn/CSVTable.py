@@ -49,7 +49,6 @@ class CSVTable(wx.grid.GridTableBase):
                 added = 0
         print('total time: ', time.time() - start)
         wx.CallAfter(self.notify_grid_added, added)
-        
 
     def notify_grid_added(self, added):
         grid = self.GetView()
@@ -61,7 +60,7 @@ class CSVTable(wx.grid.GridTableBase):
 
     def build_csvreader(self, src_file):
         # reader = csv.reader(iter(m.readline, ""))
-        sample = src_file.read(SAMPLE_BYTES)
+        sample = src_file.read(SAMPLE_BYTES).decode('utf-8')
         src_file.seek(0)
         try:
             # detect file type
