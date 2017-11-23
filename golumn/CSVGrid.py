@@ -40,7 +40,7 @@ class CSVGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
 
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
-        self.reset_font()
+        self.AutoSizeColumns(setAsMin=False)
 
     def on_zoom_in(self, evt=None):
         self.font_size = self.font_size * 1.1
