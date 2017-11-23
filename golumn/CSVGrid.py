@@ -128,14 +128,14 @@ class CSVGrid(wx.grid.Grid):
             top, bottom = self.GetSelectedRows()[0], self.GetSelectedRows()[-1]+1
             left = 0
             right = self.GetNumberCols()
-        elif self.GetGridCursorCol():
+        else:
             top, bottom = self.GetGridCursorRow(), self.GetGridCursorRow()+1
             left, right = self.GetGridCursorCol(), self.GetGridCursorCol()+1
 
         return [top, bottom, left, right]
 
     def on_copy(self, evt):
-        with tempfile.TemporaryFile() as file:
+        with tempfile.TemporaryFile('w+') as file:
             writer = csv.writer(file, dialect=DEFAULT_COPY_DIALECT)
 
             top, bottom, left, right = self.real_selection()
