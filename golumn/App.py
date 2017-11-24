@@ -10,7 +10,7 @@ import traceback
 import wx
 import wx.grid
 
-from golumn.CSVGrid import CSVGrid
+from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
 
 HOST = 'localhost'
 PORT = 65430
@@ -28,18 +28,18 @@ class GolumnFrame(wx.Frame):
         self.MakeMenuBar()
         self.MakeToolBar()
         self.MakeStatusBar()
+        self.MakeGrid()
 
+    def MakeGrid(self):
         try:
             # Setup the grid BEFORE the frame
-            self.grid = CSVGrid(self, self.src)
-            self.grid.Fit()
+            self.grid = CreateGrid(self, self.src)
             self.PostSizeEvent()
         except Exception as err:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stdout)
             wx.MessageBox("{0}".format(err), caption="Could not open source")
             self.Close()
-            return
 
     def MakeMenuBar(self):
         mb = wx.MenuBar()

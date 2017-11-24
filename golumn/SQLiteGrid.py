@@ -5,14 +5,13 @@ import re
 import wx
 import tempfile
 
-from golumn.CSVTable import CSVTable
 from golumn.SQLiteTable import SQLiteTable
 from . import App as App
 
 DEFAULT_COPY_DIALECT = 'excel-tab'
 
 
-class CSVGrid(wx.grid.Grid):
+class SQLiteGrid(wx.grid.Grid):
     def __init__(self, parent, src):
         self.src = src
         wx.grid.Grid.__init__(self)
