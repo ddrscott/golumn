@@ -10,6 +10,7 @@ import traceback
 import wx
 import wx.grid
 
+from golumn.Utils import debounce
 from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
 
 HOST = 'localhost'

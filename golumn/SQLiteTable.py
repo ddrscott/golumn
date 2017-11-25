@@ -182,11 +182,14 @@ class SQLiteTable(wx.grid.GridTableBase):
         grid = self.GetView()
         row = grid.GetGridCursorRow()
         col = grid.GetGridCursorCol()
+        start = time.time()
         new_total = self.select_count()
         # wx.SetCursor(wx.StockCursor(wx.CURSOR_WAIT))
         # grid.GetParent().set_status_text('Loading...')
         grid.SetGridCursor(row, col)
         wx.LogDebug('filtered count: {0:,}'.format(new_total))
+
+        self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - start, new_total))
         grid.BeginBatch()
         if new_total < self.total_rows:
             grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, new_total + 1, self.total_rows - new_total))
