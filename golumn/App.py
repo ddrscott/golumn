@@ -162,12 +162,9 @@ class GolumnFrame(wx.Frame):
             )
 
         if dlg.ShowModal() == wx.ID_OK:
-            paths = dlg.GetPaths()
-            path = paths[0]
-
-            with open(path, 'rb') as input_file:
+            for path in dlg.GetPaths():
                 title = os.path.basename(path)
-                wx.GetApp().LoadFile(title, input_file)
+                wx.GetApp().OpenPath(title, path)
 
         dlg.Destroy()
 
@@ -185,43 +182,6 @@ class GolumnApp(wx.App):
         # print "OnExit called"
         return wx.App.OnExit(self)
 
-    def LoadData(self, title, rows):
-        # start window on the top, and demote it in the next cycle
-        frm = GolumnFrame(None, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP, title=title, size=(1024, 600), rows=rows)
-        frm.Centre()
-        frm.Show()
-
-        # allow the window to go away
-        frm.RequestUserAttention()
-        wx.CallLater(1, lambda: frm.ToggleWindowStyle(wx.STAY_ON_TOP))
-
-    def LoadFile(self, title, input_file):
-
-        rows = []
-        try:
-            # detect file type
-            dialect = csv.Sniffer().sniff(input_file.read(1024 * 50))
-            input_file.seek(0)
-        except Exception as err:
-            wx.MessageBox(
-                err.message,
-                caption='Error opening file'
-                )
-            sys.exit(1)
-
-        csvreader = csv.reader(input_file, dialect)
-
-        # convert csv reader to rows
-        for row in csvreader:
-            rows.append(row)
-
-        self.LoadData(title, rows)
-
-    def LoadPath(self, title, file_path):
-        with open(file_path, 'rb') as src:
-            title = title or os.path.basename(file_path)
-            self.LoadFile(title, src)
-
     def OpenPath(self, title, file_path):
         # start window on the top, and demote it in the next cycle
         frm = GolumnFrame(None,
@@ -236,7 +196,7 @@ class GolumnApp(wx.App):
         # bounce app icon
         frm.RequestUserAttention()
         # allow the window to go away
-        wx.CallLater(1, lambda: frm.ToggleWindowStyle(wx.STAY_ON_TOP))
+        wx.CallLater(1, lambda: frm.SetWindowStyle(wx.DEFAULT_FRAME_STYLE))
 
     def LoadPackage(self, args):
         wx.CallAfter(self.OpenPath, args.title, args.filename)
