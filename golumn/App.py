@@ -103,14 +103,14 @@ class GolumnFrame(wx.Frame):
         tb.Realize()
 
     def MakeStatusBar(self):
-        self.sb = wx.StatusBar(self, -1)
-        self.sb.SetFieldsCount(3)
-        self.SetStatusBar(self.sb)
+        self.CreateStatusBar(2)
+        self.set_status_text('Loading...')
 
-    def status_row_count(self, count):
-        rowLabel = 'rows: {:,}'.format(count)
-        self.sb.SetStatusWidths([-2, 1, 8 * len(rowLabel)])
-        self.sb.SetStatusText(rowLabel, 2)
+    def set_status_text(self, text):
+        size = wx.Window.GetTextExtent(self, text)
+        gripper_size = 6
+        self.SetStatusWidths([-1, size.width + gripper_size])
+        self.SetStatusText(text, 1)
 
     def on_find(self, evt):
         self.search.SetFocus()

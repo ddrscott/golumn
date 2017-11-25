@@ -57,7 +57,7 @@ class CSVTable(wx.grid.GridTableBase):
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, added))
         grid.EndBatch()
         grid.AdjustScrollbars()
-        grid.GetParent().status_row_count(len(self.data))
+        grid.GetParent().set_status_text('rows: {:,}'.format(len(self.data)))
 
     def build_csvreader(self, src_file):
         # reader = csv.reader(iter(m.readline, ""))

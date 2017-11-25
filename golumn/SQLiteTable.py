@@ -16,6 +16,9 @@ QUERY_PAGE_SIZE = 1000
 # initial rows to display for auto sizing
 INIT_ROW_AUTO_SIZE = 100
 
+# status update interval
+STATUS_UPDATE_INTERVAL_SEC = 0.314159
+
 
 class SQLiteTable(wx.grid.GridTableBase):
     def __init__(self, src=None, dst_db='tmp/golumn.db', dst_table=None):
@@ -25,12 +28,16 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.conn = sqlite3.connect(dst_db)
         self.table = dst_table or ('_' + md5(src.encode('utf-8')).hexdigest())
         self.frames = read_csv(src, chunksize=CSV_CHUNK_SIZE)
+        self.start_time = time.time()
 
         # Load first frame immediately into DB. Replace table if needed.
         self.first_frame = next(self.frames)
         self.first_frame.to_sql(self.table, self.conn, if_exists='replace', index=False)
         self.total_rows = len(self.first_frame)
         self.handle_fake_row_count()
+
+        # for filtering
+        self.where = list()
 
     def handle_fake_row_count(self):
         self.fake_row_count = None
@@ -45,7 +52,6 @@ class SQLiteTable(wx.grid.GridTableBase):
         wx.CallAfter(lambda: threading.Thread(target=self.load_data_bg).start())
 
     def load_data_bg(self):
-        start = time.time()
         tick = time.time()
         bg_conn = sqlite3.connect(self.dst_db)
         added = 0
@@ -53,23 +59,31 @@ class SQLiteTable(wx.grid.GridTableBase):
             frame.to_sql(self.table, bg_conn, if_exists='append', index=False)
             added += len(frame)
             self.total_rows += len(frame)
-            if (time.time() - tick) > 0.5:
+            if (time.time() - tick) > STATUS_UPDATE_INTERVAL_SEC:
                 tick = time.time()
                 wx.CallAfter(self.notify_grid_added, added)
                 added = 0
-        wx.LogDebug('total time: {0:,.2f}'.format(time.time() - start))
-        if added > 0:
-            wx.CallAfter(self.notify_grid_added, added)
+        # final update
+        wx.CallAfter(self.notify_grid_added, added)
         bg_conn.close()
+
+    def update_row_status(self):
+        self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - self.start_time, self.total_rows))
+
+    def frame(self):
+        return self.GetView().GetParent()
+
+    def set_status_text(self, text):
+        self.frame().set_status_text(text)
 
     def notify_grid_added(self, added):
         grid = self.GetView()
+        self.update_row_status()
         grid.SetRowLabelSize(len(str(self.total_rows)) * 8 + 8)
         grid.BeginBatch()
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, added))
         grid.EndBatch()
         grid.AdjustScrollbars()
-        grid.GetParent().status_row_count(self.total_rows)
 
     # Called when the grid needs to display labels
     def GetColLabelValue(self, col):
@@ -92,14 +106,21 @@ class SQLiteTable(wx.grid.GridTableBase):
         wx.LogDebug("fetch query: {0}".format(query))
         return [r for r in self.conn.execute(query)]
 
+    def build_query(self, select='*', limit=QUERY_PAGE_SIZE, offset=0):
+        query = ['SELECT', select, 'FROM', self.table]
+        if len(self.where) > 0:
+            query.append('WHERE ({0})'.format(') AND ('.join(self.where)))
+        query.append('LIMIT {0}'.format(limit))
+        query.append('OFFSET {0}'.format(offset))
+        return ' '.join(query)
+
     def GetValue(self, row, col):
         # calculate page needed
         limit = QUERY_PAGE_SIZE
         page_offset = row % QUERY_PAGE_SIZE
         offset = row - page_offset
         try:
-            query = 'SELECT * FROM {0} LIMIT {1} OFFSET {2}'.format(self.table, limit, offset)
-            page = self.fetch_query(query)
+            page = self.fetch_query(self.build_query(limit=limit, offset=offset))
             return page[page_offset][col]
         except Exception as err:
             return "Exception: {0}".format(err)
@@ -115,30 +136,49 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.GetView().ForceRefresh()
 
     def remove_filter(self):
-        return
-        grid = self.GetView()
-        col = grid.GetGridCursorCol()
-        row = grid.GetGridCursorRow()
+        self.where.clear()
+        self.apply_query()
 
-        grid.BeginBatch()
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
-        self.data = self.original
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
-        grid.EndBatch()
-        self.refresh_data(row, col)
+    def headers(self):
+        # import code; code.interact(local=dict(globals(), **locals()))
+        return self.first_frame.columns
+
+    def select_count(self):
+        return self.fetch_query(self.build_query(select='COUNT(1)'))[0][0]
 
     def filter_by(self, col, value):
-        return
+        if value:
+            self.where.append("{0} = '{1}'".format(self.headers()[col], value))
+        else:
+            self.where.append("{0} IS NULL".format(self.headers()[col]))
+
+        self.apply_query()
+
+    def apply_query(self):
         grid = self.GetView()
         row = grid.GetGridCursorRow()
+        col = grid.GetGridCursorCol()
+        new_total = self.select_count()
+        # wx.SetCursor(wx.StockCursor(wx.CURSOR_WAIT))
+        # grid.GetParent().set_status_text('Loading...')
+        grid.SetGridCursor(row, col)
+        wx.LogDebug('filtered count: {0:,}'.format(new_total))
         grid.BeginBatch()
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
-        self.data = [r for r in self.data if len(r) > col and r[col] == value]
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
+        if new_total < self.total_rows:
+            grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, new_total + 1, self.total_rows - new_total))
+        elif new_total > self.total_rows:
+            grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, self.total_rows))
+            grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, new_total))
+        else:
+            None
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
+        self.total_rows = new_total
         grid.EndBatch()
-        self.refresh_data(row, col)
+        grid.AdjustScrollbars()
+        # try to put cursor back where it was
+        if row > self.total_rows:
+            row = self.total_rows
+        grid.SetGridCursor(row, col)
 
     def fuzzy_filter(self, regexp):
         return
