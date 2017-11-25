@@ -87,11 +87,11 @@ class SQLiteGrid(wx.grid.Grid):
         menu.Destroy()
 
     def on_sort_a(self, evt=None):
-        # self.SetSortingColumn(self.GetGridCursorCol(), ascending=True)
+        self.SetSortingColumn(self.GetGridCursorCol(), ascending=True)
         self.GetTable().SortColumn(self.GetGridCursorCol(), reverse=False)
 
     def on_sort_z(self, evt=None):
-        # self.SetSortingColumn(self.GetGridCursorCol(), ascending=False)
+        self.SetSortingColumn(self.GetGridCursorCol(), ascending=False)
         self.GetTable().SortColumn(self.GetGridCursorCol(), reverse=True)
 
     def on_filter_selection(self, evt=None):

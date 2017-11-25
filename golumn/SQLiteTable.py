@@ -38,6 +38,8 @@ class SQLiteTable(wx.grid.GridTableBase):
 
         # for filtering
         self.where = list()
+        self.where_fuzzy = None
+        self.order_by = None
 
     def handle_fake_row_count(self):
         self.fake_row_count = None
@@ -103,15 +105,35 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     @lru_cache(maxsize=10)
     def fetch_query(self, query):
-        wx.LogDebug("fetch query: {0}".format(query))
+        wx.LogDebug("fetch query: {0}".format(query.replace('%', "%%")))
         return [r for r in self.conn.execute(query)]
 
-    def build_query(self, select='*', limit=QUERY_PAGE_SIZE, offset=0):
+    def quote_sql(self, text):
+        return text.replace("'", "\\'")
+
+    def build_query(self, select='*', limit=None, offset=None):
+        """
+        FIXME: This is probably called too often. We should find a way to make
+               it faster or call it less.
+        """
         query = ['SELECT', select, 'FROM', self.table]
-        if len(self.where) > 0:
-            query.append('WHERE ({0})'.format(') AND ('.join(self.where)))
-        query.append('LIMIT {0}'.format(limit))
-        query.append('OFFSET {0}'.format(offset))
+
+        # make a copy so we don't keep appending stuff due to fuzzy finder
+        where = list(self.where)
+        if self.where_fuzzy:
+            re = self.where_fuzzy.get('regexp', None)
+            like = self.where_fuzzy.get('like', None)
+            if re:
+                where.append(' OR '.join(["({0} REGEXP '{1}')".format(h, self.quote_sql(re)) for h in self.headers()]))
+            elif like:
+                where.append(' OR '.join(["({0} LIKE '{1}')".format(h, self.quote_sql(like)) for h in self.headers()]))
+
+        if len(where) > 0:
+            query.append('WHERE ({0})'.format(') AND ('.join(where)))
+
+        self.order_by and query.append('ORDER BY {0}'.format(self.order_by))
+        limit and query.append('LIMIT {0}'.format(limit))
+        offset and query.append('OFFSET {0}'.format(offset))
         return ' '.join(query)
 
     def GetValue(self, row, col):
@@ -123,7 +145,7 @@ class SQLiteTable(wx.grid.GridTableBase):
             page = self.fetch_query(self.build_query(limit=limit, offset=offset))
             return page[page_offset][col]
         except Exception as err:
-            return "Exception: {0}".format(err)
+            return "!!{0}".format(err)
         return None
 
     def SetValue(self, row, col, value):
@@ -131,12 +153,14 @@ class SQLiteTable(wx.grid.GridTableBase):
         # self.data[row][col] = value
 
     def SortColumn(self, col, reverse=False):
-        return
-        self.data = sorted(self.data, key=lambda r: len(r) > col and r[col], reverse=reverse)
+        self.order_by = self.headers()[col]
+        if reverse:
+            self.order_by = self.order_by + ' DESC'
         self.GetView().ForceRefresh()
 
     def remove_filter(self):
         self.where.clear()
+        self.order_by = None
         self.apply_query()
 
     def headers(self):
@@ -180,29 +204,6 @@ class SQLiteTable(wx.grid.GridTableBase):
             row = self.total_rows
         grid.SetGridCursor(row, col)
 
-    def fuzzy_filter(self, regexp):
-        return
-        # always start by restoring the original
-        if self.original != self.data:
-            self.remove_filter()
-
-        grid = self.GetView()
-        row = grid.GetGridCursorRow()
-        col = grid.GetGridCursorCol()
-        grid.BeginBatch()
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, len(self.data)))
-        self.data = [r for r in self.data for c in r if regexp.match(c)]
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, len(self.data)))
-        grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
-        grid.EndBatch()
-        self.refresh_data(row, col)
-
-    def refresh_data(self, row, col):
-        # return
-        """row, col -  where to try to put the cursor when we're done"""
-        grid = self.GetView()
-        # try to put the cursor in the same spot it was before
-        if row > len(self.data):
-            row = len(self.data) - 1
-        grid.SetGridCursor(row, col)
-        grid.reset_view()
+    def fuzzy_filter(self, **kw):
+        self.where_fuzzy = kw
+        self.apply_query()

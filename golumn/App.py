@@ -91,7 +91,8 @@ class GolumnFrame(wx.Frame):
         self.search = wx.ComboBox(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
 
         tb.AddControl(self.cbLive)
-        tb.AddControl(self.cbRegexp)
+        # TODO: put back regexp once we figure out how to reliably do it in sqlite
+        # tb.AddControl(self.cbRegexp)
         tb.AddControl(self.search)
         self.Bind(wx.EVT_CHECKBOX, self.on_live_toggle, self.cbLive)
         self.Bind(wx.EVT_CHECKBOX, self.on_filter_key, self.cbRegexp)
@@ -130,19 +131,19 @@ class GolumnFrame(wx.Frame):
     def on_live_toggle(self, evt=None):
         if self.cbLive.Value:
             self.search.Bind(wx.EVT_TEXT, self.on_filter_key)
-            self.grid.fuzzy_filter(self.search.Value, regexp=self.cbRegexp.Value)
+            self.on_filter_key()
+            # self.grid.fuzzy_filter(self.search.Value, regexp=self.cbRegexp.Value)
         else:
             self.search.Unbind(wx.EVT_TEXT)
 
     def on_filter_key(self, evt=None):
         if len(self.search.Value) > 0:
-            if self.cbRegexp.Value:
-                regexp = re.compile(self.search.Value, flags=re.IGNORECASE)
-            else:
-                regexp = re.compile(".*%s" % self.search.Value, flags=re.IGNORECASE)
-            self.grid.fuzzy_filter(regexp)
+            # if self.cbRegexp.Value:
+            #     self.grid.fuzzy_filter(regexp=self.search.Value)
+            # else:
+            self.grid.fuzzy_filter(like=self.search.Value + '%')
         else:
-            self.grid.on_remove_filter(evt)
+            self.grid.fuzzy_filter(like=None)
 
     def on_close(self, evt=None):
         self.Close()
