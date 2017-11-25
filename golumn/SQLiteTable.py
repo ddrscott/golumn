@@ -45,6 +45,8 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.fake_row_count = None
         if len(self.first_frame) > INIT_ROW_AUTO_SIZE:
             self.fake_row_count = INIT_ROW_AUTO_SIZE
+        else:
+            wx.CallAfter(self.update_row_status)
 
     def unset_fake_row_count(self):
         self.fake_row_count = None
