@@ -1,7 +1,5 @@
-import csv
 import pickle
 import os
-import re
 import sys
 import socket
 import tempfile
@@ -163,8 +161,7 @@ class GolumnFrame(wx.Frame):
 
         if dlg.ShowModal() == wx.ID_OK:
             for path in dlg.GetPaths():
-                title = os.path.basename(path)
-                wx.GetApp().OpenPath(title, path)
+                wx.GetApp().OpenPath(path, path)
 
         dlg.Destroy()
 
@@ -186,7 +183,7 @@ class GolumnApp(wx.App):
         # start window on the top, and demote it in the next cycle
         frm = GolumnFrame(None,
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP,
-                          title=title,
+                          title=title or file_path,
                           size=(1024, 600),
                           src=file_path,
                           )

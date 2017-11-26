@@ -5,8 +5,8 @@ import re
 import wx
 import tempfile
 
+import golumn.App
 from golumn.SQLiteTable import SQLiteTable
-from . import App as App
 
 DEFAULT_COPY_DIALECT = 'excel-tab'
 
@@ -33,8 +33,8 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
         parent.Bind(wx.EVT_MENU, self.on_sort_a, id=wx.ID_SORT_ASCENDING)
         parent.Bind(wx.EVT_MENU, self.on_sort_z, id=wx.ID_SORT_DESCENDING)
-        parent.Bind(wx.EVT_MENU, self.on_remove_filter, id=App.ID_REMOVE_FILTER)
-        parent.Bind(wx.EVT_MENU, self.on_filter_selection, id=App.ID_FILTER_BY_SELECTION)
+        parent.Bind(wx.EVT_MENU, self.on_remove_filter, id=golumn.App.ID_REMOVE_FILTER)
+        parent.Bind(wx.EVT_MENU, self.on_filter_selection, id=golumn.App.ID_FILTER_BY_SELECTION)
         parent.Bind(wx.EVT_MENU, self.on_zoom_in, id=wx.ID_ZOOM_IN)
         parent.Bind(wx.EVT_MENU, self.on_zoom_out, id=wx.ID_ZOOM_OUT)
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)

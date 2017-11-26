@@ -1,11 +1,11 @@
 from __future__ import print_function
-from functools import lru_cache
+from pylru import lrudecorator as lru_cache
 import sqlite3
 import time
 import threading
 import wx
 from hashlib import md5
-from pandas import read_csv
+import pandas
 
 # number of CSV rows to process at a time
 CSV_CHUNK_SIZE = 10000
@@ -27,7 +27,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.dst_db = dst_db
         self.conn = sqlite3.connect(dst_db)
         self.table = dst_table or ('_' + md5(src.encode('utf-8')).hexdigest())
-        self.frames = read_csv(src, chunksize=CSV_CHUNK_SIZE)
+        self.frames = pandas.read_csv(src, chunksize=CSV_CHUNK_SIZE)
         self.start_time = time.time()
 
         # Load first frame immediately into DB. Replace table if needed.
@@ -105,7 +105,7 @@ class SQLiteTable(wx.grid.GridTableBase):
     def IsEmptyCell(self, row, col):
         return False
 
-    @lru_cache(maxsize=10)
+    @lru_cache(10)
     def fetch_query(self, query):
         wx.LogDebug("fetch query: {0}".format(query.replace('%', "%%")))
         return [r for r in self.conn.execute(query)]
