@@ -81,12 +81,15 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     def read_chunk(self):
         rows = list()
-        for i in range(0, CSV_CHUNK_SIZE):
-            row = next(self.csvreader)
-            if row:
-                rows.append(row)
-            else:
-                break
+        try:
+            for i in range(0, CSV_CHUNK_SIZE):
+                row = next(self.csvreader)
+                if row:
+                    rows.append(row)
+                else:
+                    break
+        except(StopIteration):
+            pass
         return rows
 
     def build_csvreader(self, src):
