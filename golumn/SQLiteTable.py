@@ -1,11 +1,18 @@
 from __future__ import print_function
 from pylru import lrudecorator as lru_cache
+import csv
 import sqlite3
 import time
 import threading
 import wx
 from hashlib import md5
-import pandas
+
+from golumn.compat import u
+from golumn.SQLiteImporter import SQLiteImporter
+
+BOM = u('\ufeff')
+
+SNIFF_BYTES = 65535
 
 # number of CSV rows to process at a time
 CSV_CHUNK_SIZE = 10000
@@ -24,16 +31,22 @@ class SQLiteTable(wx.grid.GridTableBase):
     def __init__(self, src=None, dst_db='tmp/golumn.db', dst_table=None):
         wx.grid.GridTableBase.__init__(self)
 
+        wx.LogDebug('destination db: {0}'.format(dst_db))
+
         self.dst_db = dst_db
         self.conn = sqlite3.connect(dst_db)
         self.table = dst_table or ('_' + md5(src.encode('utf-8')).hexdigest())
-        self.frames = pandas.read_csv(src, chunksize=CSV_CHUNK_SIZE)
+        self.csvreader = self.build_csvreader(src)
+        self.headers = next(self.csvreader)
+        self.importer = SQLiteImporter(self.headers, db=dst_db, table=self.table)
+
         self.start_time = time.time()
 
-        # Load first frame immediately into DB. Replace table if needed.
-        self.first_frame = next(self.frames)
-        self.first_frame.to_sql(self.table, self.conn, if_exists='replace', index=False)
-        self.total_rows = len(self.first_frame)
+        # import first chunk before starting background load
+        rows = self.read_chunk()
+        self.importer.insert(rows, conn=self.conn)
+        self.total_rows = len(rows)
+        self.initial_rows = len(rows)
         self.handle_fake_row_count()
 
         # for filtering
@@ -41,35 +54,63 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.where_fuzzy = None
         self.order_by = None
 
+    def read_chunk(self):
+        rows = list()
+        for i in range(0, CSV_CHUNK_SIZE):
+            row = next(self.csvreader)
+            if row:
+                rows.append(row)
+            else:
+                break
+        return rows
+
+    def build_csvreader(self, src):
+        self.src_file = open(src, 'r')
+        sample = self.src_file.read(SNIFF_BYTES)
+        self.src_file.seek(0)
+        self.dialect = 'excel'
+        try:
+            # detect file type
+            self.dialect = csv.Sniffer().sniff(sample)
+        except Exception as err:
+            wx.MessageBox("Error: {0}\n\nSetting parser to use comma separator and double quotes.".format(err), caption='Could not CSV dialect')
+        return csv.reader(self.src_file, self.dialect)
+
     def handle_fake_row_count(self):
         self.fake_row_count = None
-        if len(self.first_frame) > INIT_ROW_AUTO_SIZE:
+        if self.initial_rows > INIT_ROW_AUTO_SIZE:
             self.fake_row_count = INIT_ROW_AUTO_SIZE
         else:
             wx.CallAfter(self.update_row_status)
 
     def unset_fake_row_count(self):
         self.fake_row_count = None
-        added = len(self.first_frame) - INIT_ROW_AUTO_SIZE
+        added = self.initial_rows - INIT_ROW_AUTO_SIZE
         wx.CallAfter(self.notify_grid_added, added)
         # background load the remaining data
         wx.CallAfter(lambda: threading.Thread(target=self.load_data_bg).start())
 
     def load_data_bg(self):
         tick = time.time()
-        bg_conn = sqlite3.connect(self.dst_db)
         added = 0
-        for frame in self.frames:
-            frame.to_sql(self.table, bg_conn, if_exists='append', index=False)
-            added += len(frame)
-            self.total_rows += len(frame)
+        rows = list()
+        num_headers = len(self.headers)
+        for row in self.csvreader:
+            rows.append(row[:num_headers])
+            added += 1
+            self.total_rows += 1
+            if len(rows) >= CSV_CHUNK_SIZE:
+                self.importer.insert(rows)
+                rows.clear()
             if (time.time() - tick) > STATUS_UPDATE_INTERVAL_SEC:
                 tick = time.time()
                 wx.CallAfter(self.notify_grid_added, added)
                 added = 0
         # final update
+        if len(rows) > 0:
+            self.importer.insert(rows)
+        self.importer.close()
         wx.CallAfter(self.notify_grid_added, added)
-        bg_conn.close()
 
     def update_row_status(self):
         self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - self.start_time, self.total_rows))
@@ -91,7 +132,7 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     # Called when the grid needs to display labels
     def GetColLabelValue(self, col):
-        return self.first_frame.columns[col]
+        return self.headers[col]
 
     def GetNumberRows(self):
         if self.fake_row_count:
@@ -100,7 +141,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         return self.total_rows
 
     def GetNumberCols(self):
-        return len(self.first_frame.columns)
+        return len(self.headers)
 
     def IsEmptyCell(self, row, col):
         return False
@@ -126,9 +167,9 @@ class SQLiteTable(wx.grid.GridTableBase):
             re = self.where_fuzzy.get('regexp', None)
             like = self.where_fuzzy.get('like', None)
             if re:
-                where.append(' OR '.join(["({0} REGEXP '{1}')".format(h, self.quote_sql(re)) for h in self.headers()]))
+                where.append(' OR '.join(["({0} REGEXP '{1}')".format(h, self.quote_sql(re)) for h in self.headers]))
             elif like:
-                where.append(' OR '.join(["({0} LIKE '{1}')".format(h, self.quote_sql(like)) for h in self.headers()]))
+                where.append(' OR '.join(["({0} LIKE '{1}')".format(h, self.quote_sql(like)) for h in self.headers]))
 
         if len(where) > 0:
             query.append('WHERE ({0})'.format(') AND ('.join(where)))
@@ -155,7 +196,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         # self.data[row][col] = value
 
     def SortColumn(self, col, reverse=False):
-        self.order_by = self.headers()[col]
+        self.order_by = self.headers[col]
         if reverse:
             self.order_by = self.order_by + ' DESC'
         self.GetView().ForceRefresh()
@@ -165,18 +206,14 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.order_by = None
         self.apply_query()
 
-    def headers(self):
-        # import code; code.interact(local=dict(globals(), **locals()))
-        return self.first_frame.columns
-
     def select_count(self):
         return self.fetch_query(self.build_query(select='COUNT(1)'))[0][0]
 
     def filter_by(self, col, value):
         if value:
-            self.where.append("{0} = '{1}'".format(self.headers()[col], value))
+            self.where.append("{0} = '{1}'".format(self.headers[col], value))
         else:
-            self.where.append("{0} IS NULL".format(self.headers()[col]))
+            self.where.append("{0} IS NULL".format(self.headers[col]))
 
         self.apply_query()
 

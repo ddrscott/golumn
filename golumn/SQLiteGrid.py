@@ -21,8 +21,7 @@ class SQLiteGrid(wx.grid.Grid):
         self.default_font_size = 12
         self.font_size = self.default_font_size
 
-        # assign data adapter
-        self.table = SQLiteTable(src=src)
+        self.table = SQLiteTable(src=src, dst_db=golumn.App.database_path())
         self.SetTable(self.table, False)
         self.SetColLabelSize(self.font_size + 8)
         self.SetRowLabelSize(self.font_size + 18)

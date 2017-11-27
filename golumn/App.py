@@ -19,6 +19,12 @@ ID_REMOVE_FILTER = wx.NewId()
 ID_DEBUG_CONSOLE = wx.NewId()
 
 
+# assign data adapter
+def database_path():
+    from os.path import normpath, join
+    data_dir = wx.StandardPaths.Get().GetUserLocalDataDir()
+    return normpath(join(data_dir, 'sqlite3_csv_tables.db'))
+
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
         self.src = kw.pop('src')
