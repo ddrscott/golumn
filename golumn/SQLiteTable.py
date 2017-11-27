@@ -54,6 +54,31 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.where_fuzzy = None
         self.order_by = None
 
+        self.closing = False
+
+        # events
+        wx.CallAfter(self.bind_events)
+
+    def bind_events(self, evt=None):
+        self.frame().Bind(wx.EVT_CLOSE, self.on_close)
+
+    def clean_up(self):
+        if self.conn:
+            wx.LogDebug('clean up database')
+            drop_stmt = 'DROP TABLE IF EXISTS {0}'.format(self.table)
+            wx.LogDebug('exec sql: {0}'.format(drop_stmt))
+            self.conn.execute(drop_stmt)
+            self.conn.execute('VACUUM')
+            self.conn.close()
+            self.conn = None
+
+    def on_close(self, evt=None):
+        self.closing = True
+        self.clean_up()
+        # let the normal handler take over
+        evt.Skip()
+        return False
+
     def read_chunk(self):
         rows = list()
         for i in range(0, CSV_CHUNK_SIZE):
@@ -96,6 +121,8 @@ class SQLiteTable(wx.grid.GridTableBase):
         rows = list()
         num_headers = len(self.headers)
         for row in self.csvreader:
+            if self.closing:
+                break
             rows.append(row[:num_headers])
             added += 1
             self.total_rows += 1
@@ -106,11 +133,12 @@ class SQLiteTable(wx.grid.GridTableBase):
                 tick = time.time()
                 wx.CallAfter(self.notify_grid_added, added)
                 added = 0
-        # final update
-        if len(rows) > 0:
-            self.importer.insert(rows)
-        self.importer.close()
-        wx.CallAfter(self.notify_grid_added, added)
+        if not self.closing:
+            # final update
+            if len(rows) > 0:
+                self.importer.insert(rows)
+            self.importer.close()
+            wx.CallAfter(self.notify_grid_added, added)
 
     def update_row_status(self):
         self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - self.start_time, self.total_rows))

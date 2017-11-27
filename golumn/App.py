@@ -28,6 +28,7 @@ def database_path():
         os.mkdir(data_dir)
     return normpath(join(data_dir, 'sqlite3_csv_tables.db'))
 
+
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
         self.src = kw.pop('src')

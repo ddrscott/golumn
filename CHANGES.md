@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.7.3
+- drop Pandas due to incompatibilities with py2app
+
 ## 0.7.0
 - dropped support for Python 2.7
   - for use of lru_cache
