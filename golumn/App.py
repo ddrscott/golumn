@@ -21,8 +21,11 @@ ID_DEBUG_CONSOLE = wx.NewId()
 
 # assign data adapter
 def database_path():
-    from os.path import normpath, join
+    import os
+    from os.path import normpath, isdir, join
     data_dir = wx.StandardPaths.Get().GetUserLocalDataDir()
+    if not isdir(data_dir):
+        os.mkdir(data_dir)
     return normpath(join(data_dir, 'sqlite3_csv_tables.db'))
 
 class GolumnFrame(wx.Frame):
