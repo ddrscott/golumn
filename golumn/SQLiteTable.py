@@ -37,6 +37,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.conn = sqlite3.connect(dst_db)
         self.table = dst_table or ('_' + md5(src.encode('utf-8')).hexdigest())
         self.csvreader = self.build_csvreader(src)
+        # TODO: rename duplicate headers
         self.headers = next(self.csvreader)
         self.importer = SQLiteImporter(self.headers, db=dst_db, table=self.table)
 

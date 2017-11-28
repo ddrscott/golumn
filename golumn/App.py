@@ -44,7 +44,7 @@ class GolumnFrame(wx.Frame):
             self.grid = CreateGrid(self, self.src)
             self.PostSizeEvent()
         except Exception as err:
-            wx.MessageBox("Error: {0}".format(repr(err)), caption="Could not open file: #{0}".format(self.src))
+            wx.MessageBox("Error: {0}".format(repr(err)), caption="Could not open file: {0}".format(self.src))
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stdout)
             self.Close()
