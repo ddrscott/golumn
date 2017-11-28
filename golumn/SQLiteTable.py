@@ -39,13 +39,13 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.csvreader = self.build_csvreader(src)
         # TODO: rename duplicate headers
         self.headers = next(self.csvreader)
-        self.importer = SQLiteImporter(self.headers, db=dst_db, table=self.table)
-
         self.start_time = time.time()
 
         # import first chunk before starting background load
         rows = self.read_chunk()
-        self.importer.insert(rows, conn=self.conn)
+        importer = SQLiteImporter(self.headers, db=dst_db, table=self.table)
+        importer.create_table(rows)
+        importer.close()
         self.total_rows = len(rows)
         self.initial_rows = len(rows)
         self.handle_fake_row_count()
@@ -124,6 +124,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         added = 0
         rows = list()
         num_headers = len(self.headers)
+        importer = SQLiteImporter(self.headers, db=self.dst_db, table=self.table)
         for row in self.csvreader:
             if self.closing:
                 break
@@ -131,7 +132,7 @@ class SQLiteTable(wx.grid.GridTableBase):
             added += 1
             self.total_rows += 1
             if len(rows) >= CSV_CHUNK_SIZE:
-                self.importer.insert(rows)
+                importer.insert(rows)
                 rows.clear()
             if (time.time() - tick) > STATUS_UPDATE_INTERVAL_SEC:
                 tick = time.time()
@@ -140,9 +141,9 @@ class SQLiteTable(wx.grid.GridTableBase):
         if not self.closing:
             # final update
             if len(rows) > 0:
-                self.importer.insert(rows)
-            self.importer.close()
-            wx.CallAfter(self.notify_grid_added, added)
+                importer.insert(rows)
+                wx.CallAfter(self.notify_grid_added, added)
+        importer.close()
 
     def update_row_status(self):
         self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - self.start_time, self.total_rows))
