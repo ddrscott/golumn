@@ -9,6 +9,7 @@ import wx
 import wx.grid
 
 from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
+import golumn.Utils as Utils
 
 HOST = 'localhost'
 PORT = 65430
@@ -189,14 +190,16 @@ class GolumnApp(wx.App):
         return wx.App.OnExit(self)
 
     def OpenPath(self, title, file_path):
+        size = (1024, 600)
         # start window on the top, and demote it in the next cycle
         frm = GolumnFrame(None,
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP,
                           title=title or file_path,
-                          size=(1024, 600),
+                          size=size,
                           src=file_path,
                           )
-        frm.Centre()
+
+        Utils.center_on_active_display(frm, size)
         frm.Show()
 
         # bounce app icon
