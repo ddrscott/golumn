@@ -26,4 +26,5 @@ def center_on_active_display(frm, size):
     x2, y2, w2, h2 = active_area
     x1 = int((w2 - w1) / 2)
     y1 = int((h2 - h1) / 2)
-    frm.SetPosition((x1, y1))
+    print('w1:', w1, ', h1:', h1, ', x2:', x2, ', y2:', y2, ', h2:', h2, ', w2:', w2, ', x1:', x1, ', y1:', y1)
+    frm.SetPosition((x2 + x1, y2 + y1))
