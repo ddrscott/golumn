@@ -2,7 +2,6 @@ from __future__ import division
 from __future__ import absolute_import
 import csv
 import re
-import sqlite3
 import wx
 import tempfile
 
