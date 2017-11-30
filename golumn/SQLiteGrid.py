@@ -34,6 +34,7 @@ class SQLiteGrid(wx.grid.Grid):
         self.SetMargins(-10, -10)   # remove some whitespace, but leave enough for scrollbar overlap
         self.DisableDragRowSize()
         self.SetUseNativeColLabels()
+        self.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_select_cell)
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
         parent.Bind(wx.EVT_MENU, self.on_sort_a, id=wx.ID_SORT_ASCENDING)
         parent.Bind(wx.EVT_MENU, self.on_sort_z, id=wx.ID_SORT_DESCENDING)
@@ -63,6 +64,13 @@ class SQLiteGrid(wx.grid.Grid):
         #        We should remove non visible rows, AutoSize, then put them back.
         self.AutoSize()
         self.reset_view()
+
+    def on_select_cell(self, evt=None):
+        if hasattr(self, 'force_grid_cursor'):
+            del self.force_grid_cursor
+        else:
+            self.force_grid_cursor = True
+            wx.CallAfter(self.SetGridCursor, evt.GetRow(), evt.GetCol())
 
     def on_cell_right_click(self, evt=None):
         if not hasattr(self, "evt_sort_a"):
