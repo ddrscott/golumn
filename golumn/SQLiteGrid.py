@@ -24,12 +24,16 @@ class SQLiteGrid(wx.grid.Grid):
 
         self.table = SQLiteTable(src=src, dst_db=golumn.App.database_path())
         self.SetTable(self.table, False)
+        for i, ct in enumerate(self.table.column_types):
+            if ct == 'numeric' or ct == 'integer':
+                attr = wx.grid.GridCellAttr()
+                attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
+                self.SetColAttr(i, attr)
         self.SetColLabelSize(self.font_size + 8)
         self.SetRowLabelSize(self.font_size + 18)
         self.SetMargins(-10, -10)   # remove some whitespace, but leave enough for scrollbar overlap
         self.DisableDragRowSize()
         self.SetUseNativeColLabels()
-
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
         parent.Bind(wx.EVT_MENU, self.on_sort_a, id=wx.ID_SORT_ASCENDING)
         parent.Bind(wx.EVT_MENU, self.on_sort_z, id=wx.ID_SORT_DESCENDING)
@@ -38,9 +42,8 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_zoom_in, id=wx.ID_ZOOM_IN)
         parent.Bind(wx.EVT_MENU, self.on_zoom_out, id=wx.ID_ZOOM_OUT)
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
-
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
-        self.AutoSizeColumns(setAsMin=False)
+        self.AutoSize()
 
     def on_zoom_in(self, evt=None):
         self.font_size = self.font_size * 1.1
