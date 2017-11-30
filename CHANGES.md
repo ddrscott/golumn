@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.8.0
+- Align numeric columns to the right (Issue #5)
+- Open frame in active display
+- Ensure grid cell is selected after click
+- Fixed connection errors between main and background thread
+- Fix row index synchronization. (Issue #8)
+
 ## 0.7.3
 - drop Pandas due to incompatibilities with py2app
 
