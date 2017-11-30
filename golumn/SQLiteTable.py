@@ -144,6 +144,7 @@ class SQLiteTable(wx.grid.GridTableBase):
             # final update
             if len(rows) > 0:
                 importer.insert(rows)
+            if added > 0:
                 wx.CallAfter(self.notify_grid_added, added)
         importer.close()
 
@@ -249,7 +250,6 @@ class SQLiteTable(wx.grid.GridTableBase):
             self.where.append("{0} = '{1}'".format(self.headers[col], value))
         else:
             self.where.append("{0} IS NULL".format(self.headers[col]))
-
         self.apply_query()
 
     def apply_query(self):
@@ -258,24 +258,22 @@ class SQLiteTable(wx.grid.GridTableBase):
         col = grid.GetGridCursorCol()
         start = time.time()
         new_total = self.select_count()
-        # wx.SetCursor(wx.StockCursor(wx.CURSOR_WAIT))
-        # grid.GetParent().set_status_text('Loading...')
         grid.SetGridCursor(row, col)
         wx.LogDebug('filtered count: {0:,}'.format(new_total))
 
         self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - start, new_total))
         grid.BeginBatch()
         if new_total < self.total_rows:
-            grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, new_total + 1, self.total_rows - new_total))
+            grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, new_total, self.total_rows - new_total))
         elif new_total > self.total_rows:
-            grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 0, self.total_rows))
-            grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, new_total))
+            grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED, new_total - self.total_rows))
         else:
             None
         grid.ProcessTableMessage(wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES))
         self.total_rows = new_total
         grid.EndBatch()
         grid.AdjustScrollbars()
+        grid.ForceRefresh()
         # try to put cursor back where it was
         if row > self.total_rows:
             row = self.total_rows
