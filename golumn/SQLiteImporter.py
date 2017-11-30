@@ -1,5 +1,6 @@
+import wx
 import sqlite3
-
+import golumn.types as types
 
 class SQLiteImporter():
     def __init__(self, headers, db=None, table=None):
@@ -8,10 +9,14 @@ class SQLiteImporter():
         self.insert_stmt = 'INSERT INTO {0} VALUES ({1})'.format(self.table, ', '.join(['?' for h in self.headers]))
         self.conn = sqlite3.connect(db)
 
-    def create_table(self, rows):
+    def create_table(self, rows, column_types):
         # TODO: infer types
-        self.conn.execute('DROP TABLE IF EXISTS {0}'.format(self.table))
-        self.conn.execute('CREATE TABLE {0} ({1})'.format(self.table, ', '.join(self.headers)))
+        query = 'DROP TABLE IF EXISTS {0}'.format(self.table)
+        self.conn.execute(query)
+        columns = ', '.join([' '.join((x, y)) for x, y in zip(self.headers, column_types)])
+        query = 'CREATE TABLE {0} ({1})'.format(self.table, columns)
+        wx.LogDebug(query)
+        self.conn.execute(query)
         self.insert(rows)
         self.conn.commit()
 

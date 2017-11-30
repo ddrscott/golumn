@@ -9,6 +9,8 @@ from hashlib import md5
 
 from golumn.compat import u
 from golumn.SQLiteImporter import SQLiteImporter
+from golumn.Utils import unique_array
+import golumn.types as types
 
 BOM = u('\ufeff')
 
@@ -37,14 +39,14 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.conn = sqlite3.connect(dst_db)
         self.table = dst_table or ('_' + md5(src.encode('utf-8')).hexdigest())
         self.csvreader = self.build_csvreader(src)
-        # TODO: rename duplicate headers
-        self.headers = next(self.csvreader)
+        self.headers = unique_array(next(self.csvreader))
         self.start_time = time.time()
 
         # import first chunk before starting background load
         rows = self.read_chunk()
+        self.column_types = types.detect_columns(rows)
         importer = SQLiteImporter(self.headers, db=dst_db, table=self.table)
-        importer.create_table(rows)
+        importer.create_table(rows, self.column_types)
         importer.close()
         self.total_rows = len(rows)
         self.initial_rows = len(rows)
@@ -133,7 +135,7 @@ class SQLiteTable(wx.grid.GridTableBase):
             self.total_rows += 1
             if len(rows) >= CSV_CHUNK_SIZE:
                 importer.insert(rows)
-                rows.clear()
+                del rows[:]
             if (time.time() - tick) > STATUS_UPDATE_INTERVAL_SEC:
                 tick = time.time()
                 wx.CallAfter(self.notify_grid_added, added)
@@ -235,7 +237,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.GetView().ForceRefresh()
 
     def remove_filter(self):
-        self.where.clear()
+        del self.where[:]
         self.order_by = None
         self.apply_query()
 
