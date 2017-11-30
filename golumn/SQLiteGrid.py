@@ -7,6 +7,8 @@ import tempfile
 
 import golumn.App
 from golumn.SQLiteTable import SQLiteTable
+import golumn.key_bindings as key_bindings
+import golumn.key_bindings.vim as vim
 
 DEFAULT_COPY_DIALECT = 'excel-tab'
 
@@ -34,6 +36,7 @@ class SQLiteGrid(wx.grid.Grid):
         self.DisableDragRowSize()
         self.SetUseNativeColLabels()
         self.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_select_cell)
+        self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
         parent.Bind(wx.EVT_MENU, self.on_sort_a, id=wx.ID_SORT_ASCENDING)
         parent.Bind(wx.EVT_MENU, self.on_sort_z, id=wx.ID_SORT_DESCENDING)
@@ -43,6 +46,7 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_zoom_out, id=wx.ID_ZOOM_OUT)
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
+        self.bind_motions()
         self.AutoSize()
 
     def on_zoom_in(self, evt=None):
@@ -177,3 +181,23 @@ class SQLiteGrid(wx.grid.Grid):
         self.ForceRefresh()
         self.GetParent().PostSizeEvent()
 
+    def bind_motions(self):
+        self.Bind(key_bindings.EVT_MOVE_DOWN, lambda(evt): self.MoveCursorDown(False))
+        self.Bind(key_bindings.EVT_MOVE_UP, lambda(evt): self.MoveCursorUp(False))
+        self.Bind(key_bindings.EVT_MOVE_LEFT, lambda(evt): self.MoveCursorLeft(False))
+        self.Bind(key_bindings.EVT_MOVE_RIGHT, lambda(evt): self.MoveCursorRight(False))
+        # ID_MOVE_UP = wx.NewId()
+        # ID_MOVE_DOWN = wx.NewId()
+        # ID_MOVE_LEFT = wx.NewId()
+        # ID_MOVE_RIGHT = wx.NewId()
+        # ID_MOVE_PAGE_UP = wx.NewId()
+        # ID_MOVE_PAGE_DOWN = wx.NewId()
+        # ID_MOVE_SCROLL_UP = wx.NewId()
+        # ID_MOVE_SCROLL_DOWN = wx.NewId()
+
+    def on_key_down(self, evt=None):
+        if vim.on_key_down(self, evt):
+            pass
+        else:
+            # let original handler take it
+            evt.Skip()
