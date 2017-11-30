@@ -84,7 +84,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/ddrsco
 - [x] Sort by Current Column A to Z SHIFT+CMD+A
 - [x] Sort by Current Column Z to A SHIFT+CMD+Z
 - [x] Single App Instance
-- [ ] Search filter across all columns
+- [x] Search filter across all columns
 - [ ] History List
 - [ ] `--update` flag to refresh data for last frame
 - [ ] `--height num` argument to allow sizing the frame by percentage or pixels
