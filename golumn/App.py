@@ -1,3 +1,6 @@
+# -*- coding: utf8 -*-
+
+import platform
 import pickle
 import os
 import sys
@@ -97,7 +100,12 @@ class GolumnFrame(wx.Frame):
         self.cbLive.SetValue(True)
         self.cbRegexp = wx.CheckBox(tb, -1, "Regexp")
         self.cbRegexp.SetValue(True)
-        self.search = wx.ComboBox(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
+        self.search = wx.SearchCtrl(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
+
+        if platform.system() == 'Darwin':
+            self.search.SetHint('Filter Rows... (⌘-F)')
+        else:
+            self.search.SetHint('Filter Rows...')
 
         tb.AddControl(self.cbLive)
         # TODO: put back regexp once we figure out how to reliably do it in sqlite
