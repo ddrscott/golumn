@@ -203,9 +203,9 @@ class SQLiteTable(wx.grid.GridTableBase):
             re = self.where_fuzzy.get('regexp', None)
             like = self.where_fuzzy.get('like', None)
             if re:
-                where.append(' OR '.join(["({0} REGEXP '{1}')".format(h, self.quote_sql(re)) for h in self.headers]))
+                where.append(' OR '.join(["(`{0}` REGEXP '{1}')".format(h, self.quote_sql(re)) for h in self.headers]))
             elif like:
-                where.append(' OR '.join(["({0} LIKE '{1}')".format(h, self.quote_sql(like)) for h in self.headers]))
+                where.append(' OR '.join(["(`{0}` LIKE '{1}')".format(h, self.quote_sql(like)) for h in self.headers]))
 
         if len(where) > 0:
             query.append('WHERE ({0})'.format(') AND ('.join(where)))
@@ -232,7 +232,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         # self.data[row][col] = value
 
     def SortColumn(self, col, reverse=False):
-        self.order_by = self.headers[col]
+        self.order_by = '`' + self.headers[col] + '`'
         if reverse:
             self.order_by = self.order_by + ' DESC'
         self.GetView().ForceRefresh()
@@ -247,9 +247,9 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     def filter_by(self, col, value):
         if value:
-            self.where.append("{0} = '{1}'".format(self.headers[col], value))
+            self.where.append("`{0}` = '{1}'".format(self.headers[col], value))
         else:
-            self.where.append("{0} IS NULL".format(self.headers[col]))
+            self.where.append("`{0}` IS NULL".format(self.headers[col]))
         self.apply_query()
 
     def apply_query(self):

@@ -13,7 +13,7 @@ class SQLiteImporter():
         # TODO: infer types
         query = 'DROP TABLE IF EXISTS {0}'.format(self.table)
         self.conn.execute(query)
-        columns = ', '.join([' '.join((x, y)) for x, y in zip(self.headers, column_types)])
+        columns = ', '.join([' '.join(('`{0}`'.format(x), y)) for x, y in zip(self.headers, column_types)])
         query = 'CREATE TABLE {0} ({1})'.format(self.table, columns)
         wx.LogDebug(query)
         self.conn.execute(query)
