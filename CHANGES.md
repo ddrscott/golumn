@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.8.1
+- Handle headers with illegal characters
+
 ## 0.8.0
 - Align numeric columns to the right (Issue #5)
 - Open frame in active display
