@@ -127,13 +127,8 @@ class SQLiteGrid(wx.grid.Grid):
         top, left, bottom, right = [0, 0, 0, 0]
 
         if self.GetSelectionBlockTopLeft():
-            # Bug! Prevents me from accessing GridCellCoords directly.
-            # This gets the values as strings and maps the digits to an
-            # array of ints.
-            #     GridCellCoordsArray: [GridCellCoords(2, 0)]
-            # https://groups.google.com/forum/#!topic/wxpython-dev/Isw1L5_i6po
-            top, left = map(int, re.findall('\d+', str(self.GetSelectionBlockTopLeft())))
-            bottom, right = map(lambda x: int(x) + 1, re.findall('\d+', str(self.GetSelectionBlockBottomRight())))
+            top, left = self.selection_top_left()
+            bottom, right = self.selection_bottom_right()
         elif self.GetSelectedCols():
             top = 0
             bottom = self.GetNumberRows()
@@ -148,6 +143,26 @@ class SQLiteGrid(wx.grid.Grid):
 
         single = (top == bottom - 1) and (left == right - 1)
         return [top, bottom, left, right, single]
+
+    def selection_top_left(self):
+        """
+        Bug! Prevents me from accessing GridCellCoords directly.
+        This gets the values as strings and maps the digits to an
+        array of ints.
+            GridCellCoordsArray: [GridCellCoords(2, 0)]
+        https://groups.google.com/forum/#!topic/wxpython-dev/Isw1L5_i6po
+        """
+        return map(int, re.findall('\d+', str(self.GetSelectionBlockTopLeft())))
+
+    def selection_bottom_right(self):
+        """
+        Bug! Prevents me from accessing GridCellCoords directly.
+        This gets the values as strings and maps the digits to an
+        array of ints.
+            GridCellCoordsArray: [GridCellCoords(2, 0)]
+        https://groups.google.com/forum/#!topic/wxpython-dev/Isw1L5_i6po
+        """
+        return map(lambda x: int(x) + 1, re.findall('\d+', str(self.GetSelectionBlockBottomRight())))
 
     def on_copy(self, evt):
         with tempfile.TemporaryFile('w+') as file:
