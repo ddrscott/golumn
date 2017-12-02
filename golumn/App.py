@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+from collections import OrderedDict
 import platform
 import pickle
 import os
@@ -12,7 +13,9 @@ import wx
 import wx.grid
 
 from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
+import golumn
 import golumn.Utils as Utils
+import golumn.events as events
 
 HOST = 'localhost'
 PORT = 65430
@@ -20,7 +23,6 @@ PORT = 65430
 ID_FILTER_BY_SELECTION = wx.NewId()
 ID_REMOVE_FILTER = wx.NewId()
 ID_DEBUG_CONSOLE = wx.NewId()
-
 
 # assign data adapter
 def database_path():
@@ -41,6 +43,9 @@ class GolumnFrame(wx.Frame):
         self.MakeToolBar()
         self.MakeStatusBar()
         self.MakeGrid()
+
+        self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_IDLE, self.on_idle)
 
     def MakeGrid(self):
         try:
@@ -134,6 +139,7 @@ class GolumnFrame(wx.Frame):
 
     def MakeStatusBar(self):
         self.CreateStatusBar(2)
+        self.SetStatusText('Tip: Select multple cells to get quick aggregates.', 0)
         self.set_status_text('Loading...')
 
     def on_reposition(self):

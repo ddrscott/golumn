@@ -7,6 +7,7 @@ import tempfile
 
 import golumn.App
 from golumn.SQLiteTable import SQLiteTable
+import golumn.events as events
 import golumn.key_bindings as key_bindings
 import golumn.key_bindings.vim as vim
 
@@ -45,9 +46,67 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_zoom_in, id=wx.ID_ZOOM_IN)
         parent.Bind(wx.EVT_MENU, self.on_zoom_out, id=wx.ID_ZOOM_OUT)
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
+
+        # bind to aggregate selection
+        parent.ch_aggregate.Bind(wx.EVT_CHOICE, self.on_calc_aggregates)
+        self.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_label_right_click)
+        self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.on_label_left_dbl_click)
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
+        self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.on_calc_aggregates)
+        self.Bind(events.EVT_AGG_SUM, self.on_agg_sum)
+        self.Bind(events.EVT_AGG_COUNT, self.on_agg_count)
+        self.Bind(events.EVT_AGG_AVG, self.on_agg_avg)
         self.bind_motions()
         self.AutoSize()
+
+    def on_agg_sum(self, evt=None):
+        print('on_agg_sum')
+
+    def on_agg_count(self, evt=None):
+        print('on_agg_count')
+
+    def on_agg_avg(self, evt=None):
+        print('on_agg_avg')
+
+    # TODO: make a pure SQL implementation
+    def on_calc_aggregates(self, evt=None):
+        """
+        Iterate through entire selection to calculate the aggregate numbers.
+        Then updates `agg_text` with the correct value.
+        """
+        top, bot, left, right, single = self.real_selection()
+        parent = self.GetParent()
+        count = 0
+        sum = 0
+        avg_count = 0
+        for r in range(top, bot):
+            for c in range(left, right):
+                try:
+                    v = self.GetCellValue(r, c)
+                    ct = self.table.column_types[c]
+                    if ct == 'numeric':
+                        sum += float(v)
+                        avg_count += 1
+                    elif ct == 'integer':
+                        sum += int(v)
+                        avg_count += 1
+                    elif v and len(v) > 0:
+                        count += 1
+                except (TypeError, ValueError):
+                    pass
+
+        if parent.ch_aggregate.Selection == 0:
+            parent.agg_text.SetValue("= {0:,}".format(sum))
+        elif parent.ch_aggregate.Selection == 1 and avg_count > 0:
+            parent.agg_text.SetValue("= {0:,}".format(float(sum) / avg_count))
+        elif parent.ch_aggregate.Selection == 2:
+            parent.agg_text.SetValue("= {0:,}".format(count))
+
+    def on_label_right_click(self, evt=None):
+        evt.Skip()
+
+    def on_label_left_dbl_click(self, evt=None):
+        evt.Skip()
 
     def on_zoom_in(self, evt=None):
         self.font_size = self.font_size * 1.1
@@ -91,11 +150,11 @@ class SQLiteGrid(wx.grid.Grid):
         # make a menu
         menu = wx.Menu()
         # Show how to put an icon in the menu
-        menu.Append(wx.MenuItem(menu, self.evt_sort_a, "Sort &A..Z"))
-        menu.Append(wx.MenuItem(menu, self.evt_sort_z, "Sort &Z..A"))
+        menu.Append(wx.MenuItem(menu, self.evt_sort_a, "Sort &A..Z\tShift+Ctrl+A"))
+        menu.Append(wx.MenuItem(menu, self.evt_sort_z, "Sort &Z..A\tShift+Ctrl+Z"))
         menu.AppendSeparator()
-        menu.Append(wx.MenuItem(menu, self.evt_filter_selection, "Filter by &Selection"))
-        menu.Append(wx.MenuItem(menu, self.evt_remove_filter, "&Remove Sort and Filter"))
+        menu.Append(wx.MenuItem(menu, self.evt_filter_selection, "Filter by &Selection\tShift+Ctrl+S"))
+        menu.Append(wx.MenuItem(menu, self.evt_remove_filter, "&Remove Sort and Filter\tShift+Ctrl+R"))
 
         self.PopupMenu(menu)
         menu.Destroy()
