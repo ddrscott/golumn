@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.9.0
+- Option to copy headers
+- Show simple aggregates of the current selection
+
 ## 0.8.1
 - Handle headers with illegal characters
 
