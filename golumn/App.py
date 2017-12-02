@@ -95,23 +95,35 @@ class GolumnFrame(wx.Frame):
     def MakeToolBar(self):
         TBFLAGS = (wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT)
         tb = self.CreateToolBar(TBFLAGS)
-        tb.AddStretchableSpace()
-        self.cbLive = wx.CheckBox(tb, -1, "Live")
-        self.cbLive.SetValue(True)
+        self.cb_live_filter = wx.CheckBox(tb, -1, "Live")
+        self.cb_live_filter.SetValue(True)
+        self.cb_copy_headers = wx.CheckBox(tb, -1, "Copy Headers")
+        self.cb_copy_headers.SetValue(False)
         self.cbRegexp = wx.CheckBox(tb, -1, "Regexp")
         self.cbRegexp.SetValue(True)
         self.search = wx.SearchCtrl(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
+
+        self.ch_aggregate = wx.Choice(tb, choices=golumn.AGGREGATES.keys())
 
         if platform.system() == 'Darwin':
             self.search.SetHint('Filter Rows... (⌘-F)')
         else:
             self.search.SetHint('Filter Rows...')
 
-        tb.AddControl(self.cbLive)
+        tb.AddControl(self.cb_copy_headers)
+        tb.AddStretchableSpace()
+        tb.AddControl(wx.StaticText(tb, -1, label='∑', style=wx.ALIGN_RIGHT))
+        tb.AddControl(self.ch_aggregate)
+
+        self.agg_text = wx.TextCtrl(tb, -1, value="=", style=wx.TE_READONLY)
+        tb.AddControl(self.agg_text)
+        tb.AddStretchableSpace()
+
+        tb.AddControl(self.cb_live_filter)
         # TODO: put back regexp once we figure out how to reliably do it in sqlite
         # tb.AddControl(self.cbRegexp)
         tb.AddControl(self.search)
-        self.Bind(wx.EVT_CHECKBOX, self.on_live_toggle, self.cbLive)
+        self.Bind(wx.EVT_CHECKBOX, self.on_live_toggle, self.cb_live_filter)
         self.Bind(wx.EVT_CHECKBOX, self.on_filter_key, self.cbRegexp)
 
         self.search.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
@@ -124,11 +136,31 @@ class GolumnFrame(wx.Frame):
         self.CreateStatusBar(2)
         self.set_status_text('Loading...')
 
+    def on_reposition(self):
+        del self.size_changed
+        return
+        rect = self.GetStatusBar().GetFieldRect(1)
+        rect.x += 1  # padding
+        rect.y += 1
+        # self.copy_header_choice.SetRect(rect)
+
     def set_status_text(self, text):
         size = wx.Window.GetTextExtent(self, text)
         gripper_size = 6
         self.SetStatusWidths([-1, size.width + gripper_size])
         self.SetStatusText(text, 1)
+
+    def copy_headers(self):
+        return self.cb_copy_headers.Value
+
+    def on_size(self, evt=None):
+        evt.Skip()
+        self.size_changed = True
+        self.on_reposition()
+
+    def on_idle(self, evt=None):
+        if hasattr(self, 'size_changed'):
+            self.on_reposition()
 
     def on_find(self, evt):
         self.search.SetFocus()
@@ -146,7 +178,7 @@ class GolumnFrame(wx.Frame):
         evt.Skip()
 
     def on_live_toggle(self, evt=None):
-        if self.cbLive.Value:
+        if self.cb_live_filter.Value:
             self.search.Bind(wx.EVT_TEXT, self.on_filter_key)
             self.on_filter_key()
             # self.grid.fuzzy_filter(self.search.Value, regexp=self.cbRegexp.Value)

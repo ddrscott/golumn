@@ -170,6 +170,9 @@ class SQLiteGrid(wx.grid.Grid):
 
             top, bottom, left, right, single_cell = self.real_selection()
 
+            if self.GetParent().copy_headers():
+                writer.writerow([h for h in self.table.headers[left:right]])
+
             for r in range(top, bottom):
                 row = []
                 for c in range(left, right):
