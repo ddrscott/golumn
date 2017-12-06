@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.10.0
+- Move aggregates to bottom status text
+
 ## 0.9.0
 - Option to copy headers
 - Show simple aggregates of the current selection
