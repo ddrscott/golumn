@@ -48,7 +48,6 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
 
         # bind to aggregate selection
-        parent.ch_aggregate.Bind(wx.EVT_CHOICE, self.on_calc_aggregates)
         self.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_label_right_click)
         self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.on_label_left_dbl_click)
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
@@ -90,17 +89,19 @@ class SQLiteGrid(wx.grid.Grid):
                     elif ct == 'integer':
                         sum += int(v)
                         avg_count += 1
-                    elif v and len(v) > 0:
+                    if v and len(str(v)) > 0:
                         count += 1
                 except (TypeError, ValueError):
                     pass
+        agg_text = 'sum: {0:,} | count: {1:,} | avg: {2:,}'.format(sum, count, sum / (avg_count if avg_count > 0 else 1))
+        # if parent.ch_aggregate.Selection == 0:
+        #     parent.agg_text.SetValue("= {0:,}".format(sum))
+        # elif parent.ch_aggregate.Selection == 1 and avg_count > 0:
+        #     parent.agg_text.SetValue("= {0:,}".format(float(sum) / avg_count))
+        # elif parent.ch_aggregate.Selection == 2:
+        #     parent.agg_text.SetValue("= {0:,}".format(count))
 
-        if parent.ch_aggregate.Selection == 0:
-            parent.agg_text.SetValue("= {0:,}".format(sum))
-        elif parent.ch_aggregate.Selection == 1 and avg_count > 0:
-            parent.agg_text.SetValue("= {0:,}".format(float(sum) / avg_count))
-        elif parent.ch_aggregate.Selection == 2:
-            parent.agg_text.SetValue("= {0:,}".format(count))
+        parent.set_aggregate_text(agg_text)
 
     def on_label_right_click(self, evt=None):
         evt.Skip()
