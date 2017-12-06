@@ -108,20 +108,12 @@ class GolumnFrame(wx.Frame):
         self.cbRegexp.SetValue(True)
         self.search = wx.SearchCtrl(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
 
-        self.ch_aggregate = wx.Choice(tb, choices=golumn.AGGREGATES.keys())
-
         if platform.system() == 'Darwin':
             self.search.SetHint('Filter Rows... (⌘-F)')
         else:
             self.search.SetHint('Filter Rows...')
 
         tb.AddControl(self.cb_copy_headers)
-        tb.AddStretchableSpace()
-        tb.AddControl(wx.StaticText(tb, -1, label='∑', style=wx.ALIGN_RIGHT))
-        tb.AddControl(self.ch_aggregate)
-
-        self.agg_text = wx.TextCtrl(tb, -1, value="=", style=wx.TE_READONLY)
-        tb.AddControl(self.agg_text)
         tb.AddStretchableSpace()
 
         tb.AddControl(self.cb_live_filter)
@@ -139,8 +131,13 @@ class GolumnFrame(wx.Frame):
 
     def MakeStatusBar(self):
         self.CreateStatusBar(2)
-        self.SetStatusText('Tip: Select multple cells to get quick aggregates.', 0)
+        self.SetStatusText('Select cells for aggregates.', 0)
         self.set_status_text('Loading...')
+
+    def set_aggregate_text(self, text):
+        # size = wx.Window.GetTextExtent(self, text)
+        # self.SetStatusWidths([-1, size / 3, self.GetStatusBar().GetStatusWidth(2)])
+        self.SetStatusText(text, 0)
 
     def on_reposition(self):
         del self.size_changed
