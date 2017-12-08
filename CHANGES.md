@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.11.0
+- Handle size arguments via --size
+- Set busy cursor when loading data
+
 ## 0.10.0
 - Move aggregates to bottom status text
 
