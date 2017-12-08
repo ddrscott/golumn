@@ -118,6 +118,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.fake_row_count = None
         added = self.initial_rows - INIT_ROW_AUTO_SIZE
         wx.CallAfter(self.notify_grid_added, added)
+        wx.BeginBusyCursor()
         # background load the remaining data
         wx.CallAfter(lambda: threading.Thread(target=self.load_data_bg).start())
 
@@ -147,6 +148,7 @@ class SQLiteTable(wx.grid.GridTableBase):
             if added > 0:
                 wx.CallAfter(self.notify_grid_added, added)
         importer.close()
+        wx.EndBusyCursor()
 
     def update_row_status(self):
         self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - self.start_time, self.total_rows))
