@@ -1,6 +1,4 @@
 # -*- coding: utf8 -*-
-
-from collections import OrderedDict
 import platform
 import pickle
 import os
@@ -13,9 +11,7 @@ import wx
 import wx.grid
 
 from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
-import golumn
 import golumn.Utils as Utils
-import golumn.events as events
 
 HOST = 'localhost'
 PORT = 65430
@@ -23,6 +19,7 @@ PORT = 65430
 ID_FILTER_BY_SELECTION = wx.NewId()
 ID_REMOVE_FILTER = wx.NewId()
 ID_DEBUG_CONSOLE = wx.NewId()
+
 
 # assign data adapter
 def database_path():
@@ -210,7 +207,7 @@ class GolumnFrame(wx.Frame):
             defaultFile="",
             wildcard="CSV Files (*.csv)|*.csv",
             style=wx.FD_OPEN | wx.FD_CHANGE_DIR | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW
-            )
+        )
 
         if dlg.ShowModal() == wx.ID_OK:
             for path in dlg.GetPaths():
