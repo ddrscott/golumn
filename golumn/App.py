@@ -232,8 +232,11 @@ class GolumnApp(wx.App):
         # print "OnExit called"
         return wx.App.OnExit(self)
 
-    def OpenPath(self, title, file_path):
-        size = (1024, 600)
+    def OpenPath(self, title, file_path, size=None):
+        size = Utils.size_by_percent(size)
+        if size:
+            wx.LogDebug("Size: {0}".format(size))
+        size = size or (1024, 600)
         # start window on the top, and demote it in the next cycle
         frm = GolumnFrame(None,
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP,
