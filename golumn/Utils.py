@@ -1,3 +1,4 @@
+import re
 import wx
 from threading import Timer
 
@@ -18,10 +19,13 @@ def debounce(wait):
             debounced.t.start()
         return debounced
 
+def active_display_client_area():
+    active_display = wx.Display.GetFromPoint(wx.GetMousePosition())
+    return wx.Display(active_display).ClientArea
+
 
 def center_on_active_display(frm, size):
-    active_display = wx.Display.GetFromPoint(wx.GetMousePosition())
-    active_area = wx.Display(active_display).ClientArea
+    active_area = active_display_client_area()
     w1, h1 = size
     x2, y2, w2, h2 = active_area
     x1 = int((w2 - w1) / 2)
@@ -40,3 +44,27 @@ def unique_array(items):
         counts[i] = counts.get(i, -1) + 1
         result.append(str(i) + str(counts[i]) if counts[i] > 0 else i)
     return result
+
+
+def size_by_percent(text):
+    if text is None or len(text) < 3:
+        return None
+
+    m = re.match(r"(\d+)(%)?x(\d+)(%)?", text)
+    if m is None:
+        return None
+
+    groups = m.groups()
+
+    x, y, w, h = active_display_client_area()
+    if groups[1]:
+        w = w * (int(groups[0]) / 100.0)
+    else:
+        w = int(groups[0])
+
+    if groups[3]:
+        h = h * (int(groups[2]) / 100.0)
+    else:
+        h = int(groups[2])
+
+    return (w, h)

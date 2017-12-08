@@ -26,6 +26,12 @@ def create_parser():
         help='Window TITLE of result set')
 
     parser.add_argument(
+        '--size',
+        dest='size',
+        metavar='SIZE',
+        help='Set the SIZE on the window. WxH or W%xH%. Pixel or Percentages')
+
+    parser.add_argument(
         '--version',
         action='version',
         version=golumn.__version__)
@@ -92,6 +98,6 @@ def main(args=None):
     # we must be the first instance, start it up
     app = GolumnApp(useBestVisual=True)
     title = args.title or os.path.basename(args.filename or '-')
-    app.OpenPath(title, args.filename)
+    app.OpenPath(title, args.filename, size=args.size)
     app.MainLoop()
     return 0
