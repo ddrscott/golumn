@@ -35,7 +35,7 @@ class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
         self.src = kw.pop('src')
         wx.Frame.__init__(self, *args, **kw)
-        
+
         self.closing = False
 
         self.MakeMenuBar()
