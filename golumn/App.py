@@ -34,8 +34,10 @@ def database_path():
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
         self.src = kw.pop('src')
-
         wx.Frame.__init__(self, *args, **kw)
+        
+        self.closing = False
+
         self.MakeMenuBar()
         self.MakeToolBar()
         self.MakeStatusBar()
@@ -43,6 +45,7 @@ class GolumnFrame(wx.Frame):
 
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
+
 
     def MakeGrid(self):
         try:
@@ -124,6 +127,7 @@ class GolumnFrame(wx.Frame):
         self.search.Bind(wx.EVT_TEXT_ENTER, self.on_filter_key)
         self.search.Bind(wx.EVT_TEXT, self.on_filter_key)
 
+        self.Bind(wx.EVT_CLOSE, self.on_close)
         tb.Realize()
 
     def MakeStatusBar(self):
@@ -195,8 +199,11 @@ class GolumnFrame(wx.Frame):
             self.grid.fuzzy_filter(like=None)
 
     def on_close(self, evt=None):
-        self.Close()
-        self.Destroy()
+        evt.Skip()
+        if not self.closing:
+            self.closing = True
+            self.Close()
+            self.grid.table.clean_up()
 
     def on_open(self, evt=None):
         # filename = wx.FileSelector("Choose a file to open")
@@ -229,7 +236,7 @@ class GolumnApp(wx.App):
         # print "OnExit called"
         return wx.App.OnExit(self)
 
-    def OpenPath(self, title, file_path, size=None):
+    def OpenPath(self, title=None, file_path=None, size=None):
         size = Utils.size_by_percent(size)
         if size:
             wx.LogDebug("Size: {0}".format(size))
