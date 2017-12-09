@@ -106,7 +106,7 @@ class GolumnFrame(wx.Frame):
         self.cb_copy_headers.SetValue(False)
         self.cbRegexp = wx.CheckBox(tb, -1, "Regexp")
         self.cbRegexp.SetValue(True)
-        self.search = wx.SearchCtrl(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
+        self.search = wx.TextCtrl(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
 
         if platform.system() == 'Darwin':
             self.search.SetHint('Filter Rows... (⌘-F)')
@@ -191,9 +191,6 @@ class GolumnFrame(wx.Frame):
 
     def on_filter_key(self, evt=None):
         if len(self.search.Value) > 0:
-            # if self.cbRegexp.Value:
-            #     self.grid.fuzzy_filter(regexp=self.search.Value)
-            # else:
             self.grid.fuzzy_filter(like=self.search.Value + '%')
         else:
             self.grid.fuzzy_filter(like=None)
