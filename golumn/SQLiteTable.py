@@ -57,13 +57,11 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.where_fuzzy = None
         self.order_by = None
 
-        self.closing = False
-
         # events
         wx.CallAfter(self.bind_events)
 
     def bind_events(self, evt=None):
-        self.frame().Bind(wx.EVT_CLOSE, self.on_close)
+        pass
 
     def clean_up(self):
         if self.conn:
@@ -71,16 +69,11 @@ class SQLiteTable(wx.grid.GridTableBase):
             drop_stmt = 'DROP TABLE IF EXISTS {0}'.format(self.table)
             wx.LogDebug('exec sql: {0}'.format(drop_stmt))
             self.conn.execute(drop_stmt)
+            wx.LogDebug('exec sql: VACUUM')
             self.conn.execute('VACUUM')
             self.conn.close()
+            wx.LogDebug('connection closed')
             self.conn = None
-
-    def on_close(self, evt=None):
-        self.closing = True
-        self.clean_up()
-        # let the normal handler take over
-        evt.Skip()
-        return False
 
     def read_chunk(self):
         rows = list()
@@ -126,10 +119,12 @@ class SQLiteTable(wx.grid.GridTableBase):
         tick = time.time()
         added = 0
         rows = list()
+        parent = self.GetView().GetParent()
         num_headers = len(self.headers)
         importer = SQLiteImporter(self.headers, db=self.dst_db, table=self.table)
         for row in self.csvreader:
-            if self.closing:
+            if parent.closing:
+                wx.LogDebug('frame is closing. load data halted.')
                 break
             rows.append(row[:num_headers])
             added += 1
@@ -141,7 +136,7 @@ class SQLiteTable(wx.grid.GridTableBase):
                 tick = time.time()
                 wx.CallAfter(self.notify_grid_added, added)
                 added = 0
-        if not self.closing:
+        if not parent.closing:
             # final update
             if len(rows) > 0:
                 importer.insert(rows)
