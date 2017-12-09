@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.11.1
+- Fix <enter> behavior in search box
+
 ## 0.11.0
 - Handle size arguments via --size
 - Set busy cursor when loading data
