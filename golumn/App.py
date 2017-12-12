@@ -11,6 +11,7 @@ import wx
 import wx.grid
 
 from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
+from golumn.log import log
 import golumn.Utils as Utils
 
 HOST = 'localhost'
@@ -236,7 +237,7 @@ class GolumnApp(wx.App):
     def OpenPath(self, title=None, file_path=None, size=None):
         size = Utils.size_by_percent(size)
         if size:
-            wx.LogDebug("Size: {0}".format(size))
+            log("Size: {0}".format(size))
         size = size or (1024, 600)
         # start window on the top, and demote it in the next cycle
         frm = GolumnFrame(None,

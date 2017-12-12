@@ -1,12 +1,17 @@
 """Simple log wrapper to write to syslog with the context of the executable name.
 """
-import __main__
 import syslog
-import os
+import wx
 
 # set the context to the executable name
-syslog.openlog(os.path.basename(__main__.__file__))
+context_name = None
 
 
 def log(txt, lvl=syslog.LOG_NOTICE):
+    global context_name
+    if context_name is None:
+        app = wx.GetApp()
+        context_name = app and app.GetAppName()
+    syslog.openlog(str(context_name))
     syslog.syslog(lvl, txt)
+    wx.LogDebug(txt)

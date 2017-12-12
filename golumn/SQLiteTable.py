@@ -8,6 +8,7 @@ import wx
 from hashlib import md5
 
 from golumn.compat import u
+from golumn.log import log
 from golumn.SQLiteImporter import SQLiteImporter
 from golumn.Utils import unique_array
 import golumn.types as types
@@ -33,7 +34,7 @@ class SQLiteTable(wx.grid.GridTableBase):
     def __init__(self, src=None, dst_db='tmp/golumn.db', dst_table=None):
         wx.grid.GridTableBase.__init__(self)
 
-        wx.LogDebug('destination db: {0}'.format(dst_db))
+        log('destination db: {0}'.format(dst_db))
 
         self.dst_db = dst_db
         self.conn = sqlite3.connect(dst_db)
@@ -65,14 +66,14 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     def clean_up(self):
         if self.conn:
-            wx.LogDebug('clean up database')
+            log('clean up database')
             drop_stmt = 'DROP TABLE IF EXISTS {0}'.format(self.table)
-            wx.LogDebug('exec sql: {0}'.format(drop_stmt))
+            log('exec sql: {0}'.format(drop_stmt))
             self.conn.execute(drop_stmt)
-            wx.LogDebug('exec sql: VACUUM')
+            log('exec sql: VACUUM')
             self.conn.execute('VACUUM')
             self.conn.close()
-            wx.LogDebug('connection closed')
+            log('connection closed')
             self.conn = None
 
     def read_chunk(self):
@@ -124,7 +125,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         importer = SQLiteImporter(self.headers, db=self.dst_db, table=self.table)
         for row in self.csvreader:
             if parent.closing:
-                wx.LogDebug('frame is closing. load data halted.')
+                log('frame is closing. load data halted.')
                 break
             rows.append(row[:num_headers])
             added += 1
@@ -181,7 +182,7 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     @lru_cache(10)
     def fetch_query(self, query):
-        wx.LogDebug("fetch query: {0}".format(query.replace('%', "%%")))
+        log("fetch query: {0}".format(query.replace('%', "%%")))
         return [r for r in self.conn.execute(query)]
 
     def quote_sql(self, text):
@@ -256,7 +257,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         start = time.time()
         new_total = self.select_count()
         grid.SetGridCursor(row, col)
-        wx.LogDebug('filtered count: {0:,}'.format(new_total))
+        log('filtered count: {0:,}'.format(new_total))
 
         self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - start, new_total))
         grid.BeginBatch()
