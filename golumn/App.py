@@ -12,6 +12,7 @@ import wx.grid
 
 from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
 from golumn.log import log
+from golumn.WindowMenu import WindowMenu
 import golumn.Utils as Utils
 
 HOST = 'localhost'
@@ -95,6 +96,8 @@ class GolumnFrame(wx.Frame):
         viewMenu.Append(wx.ID_ZOOM_100, "Zoom Reset\tCtrl+0")
         mb.Append(viewMenu, "&View")
 
+        window_menu = WindowMenu(frame=self)
+        mb.Append(window_menu, "&Window")
         # finally assign it to the frame
         self.SetMenuBar(mb)
 
