@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.12.0
+- Show open grids in Window menu
+
 ## 0.11.1
 - Fix <enter> behavior in search box
 
