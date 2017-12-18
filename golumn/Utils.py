@@ -1,6 +1,10 @@
+import chardet
+import codecs
+import os
 import re
 import wx
 from threading import Timer
+
 
 # Thanks https://gist.github.com/walkermatt/2871026
 def debounce(wait):
@@ -18,6 +22,7 @@ def debounce(wait):
             debounced.t = Timer(wait, call_it)
             debounced.t.start()
         return debounced
+
 
 def active_display_client_area():
     active_display = wx.Display.GetFromPoint(wx.GetMousePosition())
@@ -68,3 +73,17 @@ def size_by_percent(text):
         h = int(groups[2])
 
     return (w, h)
+
+
+# Thanks: https://stackoverflow.com/a/13591421/613772
+def detect_encoding(src):
+    bytes = min(32, os.path.getsize(src))
+    raw = open(src, 'rb').read(bytes)
+
+    if raw.startswith(codecs.BOM_UTF8):
+        encoding = 'utf-8-sig'
+    else:
+        result = chardet.detect(raw)
+        encoding = result['encoding']
+    return encoding
+

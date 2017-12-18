@@ -1,19 +1,17 @@
 from __future__ import print_function
 from pylru import lrudecorator as lru_cache
 import csv
+import io
 import sqlite3
 import time
 import threading
 import wx
 from hashlib import md5
 
-from golumn.compat import u
 from golumn.log import log
 from golumn.SQLiteImporter import SQLiteImporter
-from golumn.Utils import unique_array
+from golumn.Utils import unique_array, detect_encoding
 import golumn.types as types
-
-BOM = u('\ufeff')
 
 SNIFF_BYTES = 65535
 
@@ -90,13 +88,16 @@ class SQLiteTable(wx.grid.GridTableBase):
         return rows
 
     def build_csvreader(self, src):
-        self.src_file = open(src, 'r')
+        encoding = detect_encoding(src)
+        self.src_file = io.open(src, 'r', encoding=encoding)
         sample = self.src_file.read(SNIFF_BYTES)
         self.src_file.seek(0)
         self.dialect = 'excel'
         try:
             # detect file type
             self.dialect = csv.Sniffer().sniff(sample)
+            self.dialect.delimiter = bytes(self.dialect.delimiter)
+            self.dialect.quotechar = bytes(self.dialect.quotechar)
         except Exception as err:
             wx.MessageBox("Error: {0}\n\nSetting parser to use comma separator and double quotes.".format(err), caption='Could not CSV dialect')
         return csv.reader(self.src_file, self.dialect)

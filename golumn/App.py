@@ -204,7 +204,8 @@ class GolumnFrame(wx.Frame):
         if not self.closing:
             self.closing = True
             self.Close()
-            self.grid.table.clean_up()
+            if hasattr(self, 'grid'):
+                self.grid.table.clean_up()
 
     def on_open(self, evt=None):
         # filename = wx.FileSelector("Choose a file to open")
