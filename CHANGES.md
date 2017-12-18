@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.12.1
+- Fix opening UTF-16 files
+
 ## 0.12.0
 - Show open grids in Window menu
 
