@@ -26,6 +26,12 @@ def create_parser():
         help='Window TITLE of result set')
 
     parser.add_argument(
+        '--size',
+        dest='size',
+        metavar='SIZE',
+        help='Set the SIZE on the window. WxH or W%xH%. Pixel or Percentages')
+
+    parser.add_argument(
         '--version',
         action='version',
         version=golumn.__version__)
@@ -66,9 +72,7 @@ def send_server(args):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((HOST, PORT))
 
-        package = {'args': args, 'data': None}
-        if not args.filename:
-            package['data'] = sys.stdin.read()
+        package = {'args': args}
         s.sendall(pickle.dumps(package))
         s.close()
         return True
@@ -85,7 +89,7 @@ def main(args=None):
     # when no file is passed in. Assume use is piping in the data.
     if args.filename is None:
         args.filename = new_hist_file()
-        with open(args.filename, 'w+b') as dst:
+        with open(args.filename, 'w+') as dst:
             dst.write(sys.stdin.read())
 
     if send_server(args):
@@ -94,6 +98,6 @@ def main(args=None):
     # we must be the first instance, start it up
     app = GolumnApp(useBestVisual=True)
     title = args.title or os.path.basename(args.filename or '-')
-    app.LoadPath(title, args.filename)
+    app.OpenPath(title, args.filename, size=args.size)
     app.MainLoop()
     return 0

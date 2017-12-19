@@ -2,15 +2,17 @@
 
 Golumn is a visual data viewer. `column` with a "g". It behaves similar to the
 `column` command, but with a graphic user interface. It bridges the command line
-and desktop divide, by allowing us to present tabular data outside the confines
+and desktop divide by allowing us to present tabular data outside the confines
 of the terminal.
+
+<img src='https://user-images.githubusercontent.com/1975119/32884159-0a16cbae-ca7f-11e7-96a0-e703a7cbcde3.png' alt='screenshot' />
 
 The challenges without this tool is attempting managing a bunch of tabular
 output within only a terminal alone. It's difficult to maintain context when
 long scrolling text and we're often executing the same statements to bring up
 previous results.
 
-A typical work flow without this tool is to beautify the data in traditional:
+A typical workflow without this tool is chain together commands:
 
 ```sh
 # psql
@@ -82,7 +84,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/ddrsco
 - [x] Sort by Current Column A to Z SHIFT+CMD+A
 - [x] Sort by Current Column Z to A SHIFT+CMD+Z
 - [x] Single App Instance
-- [ ] Search filter across all columns
+- [x] Search filter across all columns
 - [ ] History List
 - [ ] `--update` flag to refresh data for last frame
 - [ ] `--height num` argument to allow sizing the frame by percentage or pixels
