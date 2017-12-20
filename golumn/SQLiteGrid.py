@@ -24,6 +24,8 @@ MAX_FONT_SIZE = 200.0
 
 MIN_FONT_SIZE = 1.0
 
+ZOOM_INCREMENT = 1.2
+
 class SQLiteGrid(wx.grid.Grid):
     def __init__(self, parent, src):
         self.src = src
@@ -125,11 +127,11 @@ class SQLiteGrid(wx.grid.Grid):
         evt.Skip()
 
     def on_zoom_in(self, evt=None):
-        self.font_size = min(self.font_size * 1.1, MAX_FONT_SIZE)
+        self.font_size = min(self.font_size * ZOOM_INCREMENT, MAX_FONT_SIZE)
         self.reset_font()
 
     def on_zoom_out(self, evt=None):
-        self.font_size = max(self.font_size / 1.1, MIN_FONT_SIZE)
+        self.font_size = max(self.font_size / ZOOM_INCREMENT, MIN_FONT_SIZE)
         self.reset_font()
 
     def on_zoom_reset(self, evt=None):
@@ -289,6 +291,9 @@ class SQLiteGrid(wx.grid.Grid):
     def on_key_down(self, evt=None):
         if vim.on_key_down(self, evt):
             pass
+        elif evt.ShiftDown() and evt.GetKeyCode() == 59:  # 'Shift-;, :'
+            wx.CallAfter(self.on_super_key)
+            evt.Skip()
         else:
             # let original handler take it
             evt.Skip()
@@ -299,11 +304,13 @@ class SQLiteGrid(wx.grid.Grid):
         w, h = self.GridWindow.ClientSize
         sx *= ux
         sy *= uy
+        x0 = self.XToCol(sx)
         y0 = self.YToRow(sy)
+        x1 = self.XToCol(sx + w)
         y1 = self.YToRow(sy + h)
         if y1 < 0 and y0 >= 0:
             y1 = self.GetNumberRows()
-        return (y0, y1)
+        return ((x0, y0), (x1, y1))
 
     # GetBestSize logic borrowed from:
     #   https://github.com/wxWidgets/wxWidgets/blob/4d4c14cd656734ca42b6e845618e1a46398436ed/src/generic/grid.cpp#L8349
@@ -316,7 +323,7 @@ class SQLiteGrid(wx.grid.Grid):
         max_row = 0
         visible_rows = self.visible_rows()
         for c in range(0, self.GetNumberCols()):
-            for r in range(visible_rows[0], visible_rows[1]):
+            for r in range(visible_rows[0][1], visible_rows[1][1]):
                 attr = self.GetOrCreateCellAttr(r, c)
                 rend = self.GetCellRenderer(r, c)
                 if rend is not None:
@@ -329,3 +336,16 @@ class SQLiteGrid(wx.grid.Grid):
             self.SetColSize(c, max_columns[c] + COLUMN_PADDING)
         self.SetDefaultRowSize(max_row + ROW_PADDING, resizeExistingRows=True)
         self.EndBatch()
+        self.MakeCellVisible(visible_rows[0][1], visible_rows[0][0])
+
+    def on_super_key(self):
+        # self.Scroll(-1, 100)
+        # self.GridWindow.ScrollWindow(10, 10)
+        self.debug_in_thread()
+
+    def debug_in_thread(self):
+        from ptpython.repl import embed
+        import threading
+        t = threading.Thread(target=embed, args=(globals(), locals()))
+        t.setDaemon(True)
+        t.start()
