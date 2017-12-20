@@ -7,12 +7,21 @@ import tempfile
 
 import golumn.App
 from golumn.SQLiteTable import SQLiteTable
+from golumn.log import log
 import golumn.events as events
 import golumn.key_bindings as key_bindings
 import golumn.key_bindings.vim as vim
 
 DEFAULT_COPY_DIALECT = 'excel-tab'
 
+# https://github.com/wxWidgets/wxWidgets/blob/4d4c14cd656734ca42b6e845618e1a46398436ed/src/generic/grid.cpp#L8480
+COLUMN_PADDING = 10
+
+# https://github.com/wxWidgets/wxWidgets/blob/4d4c14cd656734ca42b6e845618e1a46398436ed/src/generic/grid.cpp#L8482
+ROW_PADDING = 6
+
+# Number of rows to sample when auto sizing the grid
+SAMPLE_ROW_HEIGHTS = 50
 
 class SQLiteGrid(wx.grid.Grid):
     def __init__(self, parent, src):
@@ -56,7 +65,7 @@ class SQLiteGrid(wx.grid.Grid):
         self.Bind(events.EVT_AGG_COUNT, self.on_agg_count)
         self.Bind(events.EVT_AGG_AVG, self.on_agg_avg)
         self.bind_motions()
-        self.AutoSize()
+        self.auto_size_visible_rows()
 
     def on_agg_sum(self, evt=None):
         print('on_agg_sum')
@@ -123,9 +132,7 @@ class SQLiteGrid(wx.grid.Grid):
 
     def reset_font(self):
         self.SetDefaultCellFont(wx.Font( wx.FontInfo(int(round(self.font_size)))))
-        # FIXME: This is really slow on large datasets.
-        #        We should remove non visible rows, AutoSize, then put them back.
-        self.AutoSize()
+        self.auto_size_visible_rows()
         self.reset_view()
 
     def on_select_cell(self, evt=None):
@@ -279,3 +286,27 @@ class SQLiteGrid(wx.grid.Grid):
         else:
             # let original handler take it
             evt.Skip()
+
+    # GetBestSize logic borrowed from:
+    #   https://github.com/wxWidgets/wxWidgets/blob/4d4c14cd656734ca42b6e845618e1a46398436ed/src/generic/grid.cpp#L8349
+    def auto_size_visible_rows(self):
+        """
+        Similar to `AutoSize` but uses `SetDefaultRowSize` instead of `SetRowSize`.
+        """
+        dc = wx.ClientDC(self.GridWindow)
+        max_columns = [0 for c in range(0, self.GetNumberCols())]
+        max_row = 0
+        for c in range(0, self.GetNumberCols()):
+            for r in range(0, min(self.GetNumberRows(), SAMPLE_ROW_HEIGHTS)):
+                attr = self.GetOrCreateCellAttr(r, c)
+                rend = self.GetCellRenderer(r, c)
+                if rend is not None:
+                    size = rend.GetBestSize(self, attr, dc, r, c)
+                    max_columns[c] = max(max_columns[c], size[0])
+                    max_row = max(max_row, size[1])
+
+        self.BeginBatch()
+        for c in range(0, self.GetNumberCols()):
+            self.SetColSize(c, max_columns[c] + COLUMN_PADDING)
+        self.SetDefaultRowSize(max_row + ROW_PADDING, resizeExistingRows=True)
+        self.EndBatch()
