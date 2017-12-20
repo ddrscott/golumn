@@ -26,6 +26,7 @@ MIN_FONT_SIZE = 1.0
 
 ZOOM_INCREMENT = 1.2
 
+
 class SQLiteGrid(wx.grid.Grid):
     def __init__(self, parent, src):
         self.src = src
