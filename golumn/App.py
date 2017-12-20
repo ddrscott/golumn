@@ -108,6 +108,10 @@ class GolumnFrame(wx.Frame):
         self.cb_live_filter.SetValue(True)
         self.cb_copy_headers = wx.CheckBox(tb, -1, "Copy Headers")
         self.cb_copy_headers.SetValue(False)
+        self.cb_keep_on_top = wx.CheckBox(tb, -1, "Keep on Top")
+        self.cb_keep_on_top.SetValue(False)
+        self.cb_keep_on_top.Bind(wx.EVT_CHECKBOX, self.on_keep_on_top)
+
         self.cbRegexp = wx.CheckBox(tb, -1, "Regexp")
         self.cbRegexp.SetValue(True)
         self.search = wx.TextCtrl(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
@@ -118,6 +122,7 @@ class GolumnFrame(wx.Frame):
             self.search.SetHint('Filter Rows...')
 
         tb.AddControl(self.cb_copy_headers)
+        tb.AddControl(self.cb_keep_on_top)
         tb.AddStretchableSpace()
 
         tb.AddControl(self.cb_live_filter)
@@ -160,6 +165,11 @@ class GolumnFrame(wx.Frame):
 
     def copy_headers(self):
         return self.cb_copy_headers.Value
+
+    def on_keep_on_top(self, evt=None):
+        if evt is not None:
+            evt.Skip()
+        self.ToggleWindowStyle(wx.STAY_ON_TOP)
 
     def on_size(self, evt=None):
         evt.Skip()
