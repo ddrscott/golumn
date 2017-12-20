@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.13.0
+- Optimize Font Zooming
+
 ## 0.12.1
 - Fix opening UTF-16 files
 
