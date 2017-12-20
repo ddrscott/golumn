@@ -20,8 +20,9 @@ COLUMN_PADDING = 10
 # https://github.com/wxWidgets/wxWidgets/blob/4d4c14cd656734ca42b6e845618e1a46398436ed/src/generic/grid.cpp#L8482
 ROW_PADDING = 6
 
-# Number of rows to sample when auto sizing the grid
-SAMPLE_ROW_HEIGHTS = 50
+MAX_FONT_SIZE = 200.0
+
+MIN_FONT_SIZE = 1.0
 
 class SQLiteGrid(wx.grid.Grid):
     def __init__(self, parent, src):
@@ -33,13 +34,6 @@ class SQLiteGrid(wx.grid.Grid):
         self.default_font_size = 12
         self.font_size = self.default_font_size
 
-        self.table = SQLiteTable(src=src, dst_db=golumn.App.database_path())
-        self.SetTable(self.table, False)
-        for i, ct in enumerate(self.table.column_types):
-            if ct == 'numeric' or ct == 'integer':
-                attr = wx.grid.GridCellAttr()
-                attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
-                self.SetColAttr(i, attr)
         self.SetColLabelSize(self.font_size + 8)
         self.SetRowLabelSize(self.font_size + 18)
         self.SetMargins(-10, -10)   # remove some whitespace, but leave enough for scrollbar overlap
@@ -65,6 +59,18 @@ class SQLiteGrid(wx.grid.Grid):
         self.Bind(events.EVT_AGG_COUNT, self.on_agg_count)
         self.Bind(events.EVT_AGG_AVG, self.on_agg_avg)
         self.bind_motions()
+
+        wx.CallAfter(self.init_table, src)
+
+    def init_table(self, src):
+        self.table = SQLiteTable(src=src, dst_db=golumn.App.database_path())
+        self.SetTable(self.table, False)
+        for i, ct in enumerate(self.table.column_types):
+            if ct == 'numeric' or ct == 'integer':
+                attr = wx.grid.GridCellAttr()
+                attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
+                self.SetColAttr(i, attr)
+        # let things settle before auto sizing
         self.auto_size_visible_rows()
 
     def on_agg_sum(self, evt=None):
@@ -119,11 +125,11 @@ class SQLiteGrid(wx.grid.Grid):
         evt.Skip()
 
     def on_zoom_in(self, evt=None):
-        self.font_size = self.font_size * 1.1
+        self.font_size = min(self.font_size * 1.1, MAX_FONT_SIZE)
         self.reset_font()
 
     def on_zoom_out(self, evt=None):
-        self.font_size = self.font_size / 1.1
+        self.font_size = max(self.font_size / 1.1, MIN_FONT_SIZE)
         self.reset_font()
 
     def on_zoom_reset(self, evt=None):
@@ -287,6 +293,18 @@ class SQLiteGrid(wx.grid.Grid):
             # let original handler take it
             evt.Skip()
 
+    def visible_rows(self):
+        ux, uy = self.GetScrollPixelsPerUnit()
+        sx, sy = self.GetViewStart()
+        w, h = self.GridWindow.ClientSize
+        sx *= ux
+        sy *= uy
+        y0 = self.YToRow(sy)
+        y1 = self.YToRow(sy + h)
+        if y1 < 0 and y0 >= 0:
+            y1 = self.GetNumberRows()
+        return (y0, y1)
+
     # GetBestSize logic borrowed from:
     #   https://github.com/wxWidgets/wxWidgets/blob/4d4c14cd656734ca42b6e845618e1a46398436ed/src/generic/grid.cpp#L8349
     def auto_size_visible_rows(self):
@@ -296,8 +314,9 @@ class SQLiteGrid(wx.grid.Grid):
         dc = wx.ClientDC(self.GridWindow)
         max_columns = [0 for c in range(0, self.GetNumberCols())]
         max_row = 0
+        visible_rows = self.visible_rows()
         for c in range(0, self.GetNumberCols()):
-            for r in range(0, min(self.GetNumberRows(), SAMPLE_ROW_HEIGHTS)):
+            for r in range(visible_rows[0], visible_rows[1]):
                 attr = self.GetOrCreateCellAttr(r, c)
                 rend = self.GetCellRenderer(r, c)
                 if rend is not None:
