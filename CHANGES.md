@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.13.1
+- Fix zoom positioning
+
 ## 0.13.0
 - Optimize Font Zooming
 
