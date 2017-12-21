@@ -3,6 +3,8 @@
 ## 0.14.0
 - Copy as SQL IN
 - Copy as Array
+- More error handling
+- More lenient encoding rules
 
 ## 0.13.1
 - Fix zoom positioning
