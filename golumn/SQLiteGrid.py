@@ -26,6 +26,11 @@ MIN_FONT_SIZE = 1.0
 
 ZOOM_INCREMENT = 1.2
 
+EVT_SORT_A = wx.NewId()
+EVT_SORT_Z = wx.NewId()
+EVT_FILTER_SELECTION = wx.NewId()
+EVT_REMOVE_FILTER = wx.NewId()
+
 
 class SQLiteGrid(wx.grid.Grid):
     def __init__(self, parent, src):
@@ -42,6 +47,7 @@ class SQLiteGrid(wx.grid.Grid):
         self.SetMargins(-10, -10)   # remove some whitespace, but leave enough for scrollbar overlap
         self.DisableDragRowSize()
         self.SetUseNativeColLabels()
+        self.bind_copy_menu()
         self.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_select_cell)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
@@ -151,28 +157,43 @@ class SQLiteGrid(wx.grid.Grid):
             self.force_grid_cursor = True
             wx.CallAfter(self.SetGridCursor, evt.GetRow(), evt.GetCol())
 
-    def on_cell_right_click(self, evt=None):
-        if not hasattr(self, "evt_sort_a"):
-            self.evt_sort_a = wx.NewId()
-            self.evt_sort_z = wx.NewId()
-            self.evt_filter_selection = wx.NewId()
-            self.evt_remove_filter = wx.NewId()
-            self.Bind(wx.EVT_MENU, self.on_sort_a, id=self.evt_sort_a)
-            self.Bind(wx.EVT_MENU, self.on_sort_z, id=self.evt_sort_z)
-            self.Bind(wx.EVT_MENU, self.on_filter_selection, id=self.evt_filter_selection)
-            self.Bind(wx.EVT_MENU, self.on_remove_filter, id=self.evt_remove_filter)
+    def bind_copy_menu(self):
+        self.Bind(wx.EVT_MENU, self.on_sort_a, id=EVT_SORT_A)
+        self.Bind(wx.EVT_MENU, self.on_sort_z, id=EVT_SORT_Z)
+        self.Bind(wx.EVT_MENU, self.on_filter_selection, id=EVT_FILTER_SELECTION)
+        self.Bind(wx.EVT_MENU, self.on_remove_filter, id=EVT_REMOVE_FILTER)
+        parent = self.GetParent()
+        parent.Bind(wx.EVT_MENU, self.on_menu_copy_with_headers, id=golumn.App.EVT_MENU_COPY_WITH_HEADER)
+        parent.Bind(wx.EVT_MENU, self.on_menu_copy_as_sql_in, id=golumn.App.EVT_MENU_COPY_AS_SQL_IN)
+        parent.Bind(wx.EVT_MENU, self.on_menu_copy_as_ruby_array, id=golumn.App.EVT_MENU_COPY_AS_RUBY_ARRAY)
 
+    def on_menu_copy_with_headers(self, evt):
+        self.copy_as_excel(with_headers=True)
+
+    def on_menu_copy_as_sql_in(self, evt):
+        self.copy_as_sql_in()
+
+    def on_menu_copy_as_ruby_array(self, evt):
+        self.copy_as_ruby_array()
+
+    def on_cell_right_click(self, evt=None):
         self.SetGridCursor(evt.GetRow(), evt.GetCol())
 
         # make a menu
         menu = wx.Menu()
         # Show how to put an icon in the menu
-        menu.Append(wx.MenuItem(menu, self.evt_sort_a, "Sort &A..Z\tShift+Ctrl+A"))
-        menu.Append(wx.MenuItem(menu, self.evt_sort_z, "Sort &Z..A\tShift+Ctrl+Z"))
+        menu.Append(EVT_SORT_A, "Sort &A..Z\tShift+Ctrl+A")
+        menu.Append(EVT_SORT_Z, "Sort &Z..A\tShift+Ctrl+Z")
         menu.AppendSeparator()
-        menu.Append(wx.MenuItem(menu, self.evt_filter_selection, "Filter by &Selection\tShift+Ctrl+S"))
-        menu.Append(wx.MenuItem(menu, self.evt_remove_filter, "&Remove Sort and Filter\tShift+Ctrl+R"))
 
+        # filter items
+        menu.Append(EVT_FILTER_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
+        menu.Append(EVT_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
+        menu.AppendSeparator()
+
+        # copy menu
+        parent = self.GetParent()
+        menu.AppendSubMenu(parent.create_copy_menu(), "&Copy Special")
         self.PopupMenu(menu)
         menu.Destroy()
 
@@ -241,12 +262,46 @@ class SQLiteGrid(wx.grid.Grid):
         return map(lambda x: int(x) + 1, re.findall('\d+', str(self.GetSelectionBlockBottomRight())))
 
     def on_copy(self, evt):
+        self.copy_as_excel(with_headers=self.GetParent().copy_headers())
+
+    def selection_as_array(self, quote):
+        top, bottom, left, right, single_cell = self.real_selection()
+        values = []
+        for r in range(top, bottom):
+            for c in range(left, right):
+                v = self.GetCellValue(r, c)
+                ct = self.table.column_types[c]
+                if ct == 'numeric' or ct == 'integer':
+                    values.append(str(v))
+                else:
+                    values.append(quote + v + quote)
+        return values
+
+    def set_clipboard(self, text):
+        if wx.TheClipboard.Open():
+            clipData = wx.TextDataObject()
+            clipData.SetText(text)
+            wx.TheClipboard.SetData(clipData)
+            wx.TheClipboard.Close()
+        else:
+            dlg = wx.MessageDialog(self, 'Could not open the clipboard for copying.\nUnknown error :(', 'Clipboard Error', wx.OK | wx.ICON_ERROR)
+            dlg.ShowModal()
+
+    def copy_as_sql_in(self):
+        values = self.selection_as_array(quote="'")
+        self.set_clipboard('(' + ', '.join(values) + ')')
+
+    def copy_as_ruby_array(self):
+        values = self.selection_as_array(quote="'")
+        self.set_clipboard('[' + ', '.join(values) + ']')
+
+    def copy_as_excel(self, with_headers=False, mode=None):
         with tempfile.TemporaryFile('w+') as file:
             writer = csv.writer(file, dialect=DEFAULT_COPY_DIALECT)
 
             top, bottom, left, right, single_cell = self.real_selection()
 
-            if self.GetParent().copy_headers():
+            if with_headers:
                 writer.writerow([h for h in self.table.headers[left:right]])
 
             for r in range(top, bottom):
@@ -331,6 +386,14 @@ class SQLiteGrid(wx.grid.Grid):
                     size = rend.GetBestSize(self, attr, dc, r, c)
                     max_columns[c] = max(max_columns[c], size[0])
                     max_row = max(max_row, size[1])
+
+        # check width of all the column labels
+        for c in range(0, self.GetNumberCols()):
+            dc.SetFont(self.GetLabelFont())
+            value = self.GetColLabelValue(c)
+            size = dc.GetTextExtent(value)
+            width = size[0] + ROW_PADDING
+            max_columns[c] = max(max_columns[c], width)
 
         self.BeginBatch()
         for c in range(0, self.GetNumberCols()):
