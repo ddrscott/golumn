@@ -1,7 +1,7 @@
 import wx
 import sqlite3
-import golumn.types as types
 from golumn.log import log
+
 
 class SQLiteImporter():
     def __init__(self, headers, db=None, table=None):
@@ -11,7 +11,6 @@ class SQLiteImporter():
         self.conn = sqlite3.connect(db)
 
     def create_table(self, rows, column_types):
-        # TODO: infer types
         query = 'DROP TABLE IF EXISTS {0}'.format(self.table)
         self.conn.execute(query)
         columns = ', '.join([' '.join(('`{0}`'.format(x), y)) for x, y in zip(self.headers, column_types)])

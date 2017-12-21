@@ -85,5 +85,7 @@ def detect_encoding(src):
     else:
         result = chardet.detect(raw)
         encoding = result['encoding']
+    if encoding == 'ascii':
+        encoding = 'utf-8'
     return encoding
 

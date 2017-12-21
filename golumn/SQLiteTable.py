@@ -89,7 +89,7 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     def build_csvreader(self, src):
         encoding = detect_encoding(src)
-        self.src_file = io.open(src, 'r', encoding=encoding)
+        self.src_file = io.open(src, 'r', encoding=encoding, errors='ignore')
         sample = self.src_file.read(SNIFF_BYTES)
         self.src_file.seek(0)
         self.dialect = 'excel'
