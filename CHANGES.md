@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.14.0
+- Copy as SQL IN
+- Copy as Array
+
 ## 0.13.1
 - Fix zoom positioning
 
