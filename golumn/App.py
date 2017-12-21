@@ -22,6 +22,10 @@ ID_FILTER_BY_SELECTION = wx.NewId()
 ID_REMOVE_FILTER = wx.NewId()
 ID_DEBUG_CONSOLE = wx.NewId()
 
+EVT_MENU_COPY_WITH_HEADER = wx.NewId()
+EVT_MENU_COPY_AS_SQL_IN = wx.NewId()
+EVT_MENU_COPY_AS_RUBY_ARRAY = wx.NewId()
+
 
 # assign data adapter
 def database_path():
@@ -75,6 +79,7 @@ class GolumnFrame(wx.Frame):
         # setup Edit menu
         editMenu = wx.Menu()
         editMenu.Append(wx.ID_COPY, "&Copy\tCtrl+C")
+        editMenu.AppendSubMenu(self.create_copy_menu(), "Copy Special\tShift+Ctrl+C")
         mb.Append(editMenu, "&Edit")
 
         # setup Edit menu
@@ -100,6 +105,13 @@ class GolumnFrame(wx.Frame):
         mb.Append(window_menu, "&Window")
         # finally assign it to the frame
         self.SetMenuBar(mb)
+
+    def create_copy_menu(self):
+        copy_menu = wx.Menu()
+        copy_menu.Append(EVT_MENU_COPY_WITH_HEADER, "Copy with Headers")
+        copy_menu.Append(EVT_MENU_COPY_AS_SQL_IN, "Copy as SQL IN")
+        copy_menu.Append(EVT_MENU_COPY_AS_RUBY_ARRAY, "Copy as Array")
+        return copy_menu
 
     def MakeToolBar(self):
         TBFLAGS = (wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT)
