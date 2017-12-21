@@ -14,17 +14,10 @@ from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
 from golumn.log import log
 from golumn.WindowMenu import WindowMenu
 import golumn.Utils as Utils
+import golumn.events as events
 
 HOST = 'localhost'
 PORT = 65430
-
-ID_FILTER_BY_SELECTION = wx.NewId()
-ID_REMOVE_FILTER = wx.NewId()
-ID_DEBUG_CONSOLE = wx.NewId()
-
-EVT_MENU_COPY_WITH_HEADER = wx.NewId()
-EVT_MENU_COPY_AS_SQL_IN = wx.NewId()
-EVT_MENU_COPY_AS_RUBY_ARRAY = wx.NewId()
 
 
 # assign data adapter
@@ -51,7 +44,6 @@ class GolumnFrame(wx.Frame):
 
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
-
 
     def MakeGrid(self):
         try:
@@ -89,9 +81,9 @@ class GolumnFrame(wx.Frame):
         dataMenu.AppendSeparator()
         dataMenu.Append(wx.ID_SORT_ASCENDING, "Sort &A to Z\tShift+Ctrl+A")
         dataMenu.Append(wx.ID_SORT_DESCENDING, "Sort &Z to A\tShift+Ctrl+Z")
-        dataMenu.Append(ID_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
+        dataMenu.Append(events.EVT_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
         dataMenu.AppendSeparator()
-        dataMenu.Append(ID_FILTER_BY_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
+        dataMenu.Append(events.EVT_FILTER_BY_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
         mb.Append(dataMenu, "&Data")
 
         # setup Edit menu
@@ -108,9 +100,9 @@ class GolumnFrame(wx.Frame):
 
     def create_copy_menu(self):
         copy_menu = wx.Menu()
-        copy_menu.Append(EVT_MENU_COPY_WITH_HEADER, "Copy with Headers")
-        copy_menu.Append(EVT_MENU_COPY_AS_SQL_IN, "Copy as SQL IN")
-        copy_menu.Append(EVT_MENU_COPY_AS_RUBY_ARRAY, "Copy as Array")
+        copy_menu.Append(events.EVT_MENU_COPY_WITH_HEADER, "Copy with Headers")
+        copy_menu.Append(events.EVT_MENU_COPY_AS_SQL_IN, "Copy as SQL IN")
+        copy_menu.Append(events.EVT_MENU_COPY_AS_RUBY_ARRAY, "Copy as Array")
         return copy_menu
 
     def MakeToolBar(self):

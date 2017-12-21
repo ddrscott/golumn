@@ -1,7 +1,14 @@
 import wx.lib.newevent
 
-AggSum, EVT_AGG_SUM = wx.lib.newevent.NewEvent()
-AggAvg, EVT_AGG_AVG = wx.lib.newevent.NewEvent()
-AggCount, EVT_AGG_COUNT = wx.lib.newevent.NewEvent()
-AggMin, EVT_AGG_MIN = wx.lib.newevent.NewEvent()
-AggMax, EVT_AGG_MAX = wx.lib.newevent.NewEvent()
+EVT_FILTER_BY_SELECTION = wx.NewId()
+EVT_REMOVE_FILTER = wx.NewId()
+EVT_DEBUG_CONSOLE = wx.NewId()
+
+EVT_SORT_A = wx.NewId()
+EVT_SORT_Z = wx.NewId()
+EVT_FILTER_SELECTION = wx.NewId()
+EVT_REMOVE_FILTER = wx.NewId()
+
+EVT_MENU_COPY_WITH_HEADER = wx.NewId()
+EVT_MENU_COPY_AS_SQL_IN = wx.NewId()
+EVT_MENU_COPY_AS_RUBY_ARRAY = wx.NewId()

@@ -26,15 +26,11 @@ MIN_FONT_SIZE = 1.0
 
 ZOOM_INCREMENT = 1.2
 
-EVT_SORT_A = wx.NewId()
-EVT_SORT_Z = wx.NewId()
-EVT_FILTER_SELECTION = wx.NewId()
-EVT_REMOVE_FILTER = wx.NewId()
-
 
 class SQLiteGrid(wx.grid.Grid):
     def __init__(self, parent, src):
         self.src = src
+        self.force_grid_cursor = False
         wx.grid.Grid.__init__(self)
         self.Create(parent)
         self.EnableEditing(False)
@@ -53,8 +49,8 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
         parent.Bind(wx.EVT_MENU, self.on_sort_a, id=wx.ID_SORT_ASCENDING)
         parent.Bind(wx.EVT_MENU, self.on_sort_z, id=wx.ID_SORT_DESCENDING)
-        parent.Bind(wx.EVT_MENU, self.on_remove_filter, id=golumn.App.ID_REMOVE_FILTER)
-        parent.Bind(wx.EVT_MENU, self.on_filter_selection, id=golumn.App.ID_FILTER_BY_SELECTION)
+        parent.Bind(wx.EVT_MENU, self.on_remove_filter, id=events.EVT_REMOVE_FILTER)
+        parent.Bind(wx.EVT_MENU, self.on_filter_selection, id=events.EVT_FILTER_BY_SELECTION)
         parent.Bind(wx.EVT_MENU, self.on_zoom_in, id=wx.ID_ZOOM_IN)
         parent.Bind(wx.EVT_MENU, self.on_zoom_out, id=wx.ID_ZOOM_OUT)
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
@@ -64,9 +60,6 @@ class SQLiteGrid(wx.grid.Grid):
         self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.on_label_left_dbl_click)
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
         self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.on_calc_aggregates)
-        self.Bind(events.EVT_AGG_SUM, self.on_agg_sum)
-        self.Bind(events.EVT_AGG_COUNT, self.on_agg_count)
-        self.Bind(events.EVT_AGG_AVG, self.on_agg_avg)
         self.bind_motions()
 
         wx.CallAfter(self.init_table, src)
@@ -81,15 +74,6 @@ class SQLiteGrid(wx.grid.Grid):
                 self.SetColAttr(i, attr)
         # let things settle before auto sizing
         self.auto_size_visible_rows()
-
-    def on_agg_sum(self, evt=None):
-        print('on_agg_sum')
-
-    def on_agg_count(self, evt=None):
-        print('on_agg_count')
-
-    def on_agg_avg(self, evt=None):
-        print('on_agg_avg')
 
     # TODO: make a pure SQL implementation
     def on_calc_aggregates(self, evt=None):
@@ -118,13 +102,6 @@ class SQLiteGrid(wx.grid.Grid):
                 except (TypeError, ValueError):
                     pass
         agg_text = 'sum: {0:,} | count: {1:,} | avg: {2:,}'.format(sum, count, sum / (avg_count if avg_count > 0 else 1))
-        # if parent.ch_aggregate.Selection == 0:
-        #     parent.agg_text.SetValue("= {0:,}".format(sum))
-        # elif parent.ch_aggregate.Selection == 1 and avg_count > 0:
-        #     parent.agg_text.SetValue("= {0:,}".format(float(sum) / avg_count))
-        # elif parent.ch_aggregate.Selection == 2:
-        #     parent.agg_text.SetValue("= {0:,}".format(count))
-
         parent.set_aggregate_text(agg_text)
 
     def on_label_right_click(self, evt=None):
@@ -146,26 +123,26 @@ class SQLiteGrid(wx.grid.Grid):
         self.reset_font()
 
     def reset_font(self):
-        self.SetDefaultCellFont(wx.Font( wx.FontInfo(int(round(self.font_size)))))
+        self.SetDefaultCellFont(wx.Font(wx.FontInfo(int(round(self.font_size)))))
         self.auto_size_visible_rows()
         self.reset_view()
 
     def on_select_cell(self, evt=None):
-        if hasattr(self, 'force_grid_cursor'):
-            del self.force_grid_cursor
+        if self.force_grid_cursor:
+            self.force_grid_cursor = False
         else:
             self.force_grid_cursor = True
             wx.CallAfter(self.SetGridCursor, evt.GetRow(), evt.GetCol())
 
     def bind_copy_menu(self):
-        self.Bind(wx.EVT_MENU, self.on_sort_a, id=EVT_SORT_A)
-        self.Bind(wx.EVT_MENU, self.on_sort_z, id=EVT_SORT_Z)
-        self.Bind(wx.EVT_MENU, self.on_filter_selection, id=EVT_FILTER_SELECTION)
-        self.Bind(wx.EVT_MENU, self.on_remove_filter, id=EVT_REMOVE_FILTER)
+        self.Bind(wx.EVT_MENU, self.on_sort_a, id=events.EVT_SORT_A)
+        self.Bind(wx.EVT_MENU, self.on_sort_z, id=events.EVT_SORT_Z)
+        self.Bind(wx.EVT_MENU, self.on_filter_selection, id=events.EVT_FILTER_SELECTION)
+        self.Bind(wx.EVT_MENU, self.on_remove_filter, id=events.EVT_REMOVE_FILTER)
         parent = self.GetParent()
-        parent.Bind(wx.EVT_MENU, self.on_menu_copy_with_headers, id=golumn.App.EVT_MENU_COPY_WITH_HEADER)
-        parent.Bind(wx.EVT_MENU, self.on_menu_copy_as_sql_in, id=golumn.App.EVT_MENU_COPY_AS_SQL_IN)
-        parent.Bind(wx.EVT_MENU, self.on_menu_copy_as_ruby_array, id=golumn.App.EVT_MENU_COPY_AS_RUBY_ARRAY)
+        parent.Bind(wx.EVT_MENU, self.on_menu_copy_with_headers, id=events.EVT_MENU_COPY_WITH_HEADER)
+        parent.Bind(wx.EVT_MENU, self.on_menu_copy_as_sql_in, id=events.EVT_MENU_COPY_AS_SQL_IN)
+        parent.Bind(wx.EVT_MENU, self.on_menu_copy_as_ruby_array, id=events.EVT_MENU_COPY_AS_RUBY_ARRAY)
 
     def on_menu_copy_with_headers(self, evt):
         self.copy_as_excel(with_headers=True)
@@ -182,13 +159,13 @@ class SQLiteGrid(wx.grid.Grid):
         # make a menu
         menu = wx.Menu()
         # Show how to put an icon in the menu
-        menu.Append(EVT_SORT_A, "Sort &A..Z\tShift+Ctrl+A")
-        menu.Append(EVT_SORT_Z, "Sort &Z..A\tShift+Ctrl+Z")
+        menu.Append(events.EVT_SORT_A, "Sort &A..Z\tShift+Ctrl+A")
+        menu.Append(events.EVT_SORT_Z, "Sort &Z..A\tShift+Ctrl+Z")
         menu.AppendSeparator()
 
         # filter items
-        menu.Append(EVT_FILTER_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
-        menu.Append(EVT_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
+        menu.Append(events.EVT_FILTER_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
+        menu.Append(events.EVT_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
         menu.AppendSeparator()
 
         # copy menu
@@ -312,18 +289,10 @@ class SQLiteGrid(wx.grid.Grid):
 
             file.seek(0)
 
-            if wx.TheClipboard.Open():
-                clipData = wx.TextDataObject()
-                if single_cell:
-                    clipData.SetText(file.read().strip())
-                else:
-                    clipData.SetText(file.read())
-                wx.TheClipboard.SetData(clipData)
-                wx.TheClipboard.Close()
+            if single_cell:
+                self.set_clipboard(file.read().strip())
             else:
-                dlg = wx.MessageDialog(self, 'Could not open the clipboard for copying.\nUnknown error :(', 'Clipboard Error', wx.OK | wx.ICON_ERROR)
-                dlg.ShowModal()
-                dlg.Destroy()
+                self.set_clipboard(file.read())
 
     def reset_view(self):
         self.AdjustScrollbars()
@@ -335,14 +304,6 @@ class SQLiteGrid(wx.grid.Grid):
         self.Bind(key_bindings.EVT_MOVE_UP, lambda(evt): self.MoveCursorUp(False))
         self.Bind(key_bindings.EVT_MOVE_LEFT, lambda(evt): self.MoveCursorLeft(False))
         self.Bind(key_bindings.EVT_MOVE_RIGHT, lambda(evt): self.MoveCursorRight(False))
-        # ID_MOVE_UP = wx.NewId()
-        # ID_MOVE_DOWN = wx.NewId()
-        # ID_MOVE_LEFT = wx.NewId()
-        # ID_MOVE_RIGHT = wx.NewId()
-        # ID_MOVE_PAGE_UP = wx.NewId()
-        # ID_MOVE_PAGE_DOWN = wx.NewId()
-        # ID_MOVE_SCROLL_UP = wx.NewId()
-        # ID_MOVE_SCROLL_DOWN = wx.NewId()
 
     def on_key_down(self, evt=None):
         if vim.on_key_down(self, evt):

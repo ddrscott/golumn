@@ -3,4 +3,5 @@
 /dist
 /tmp
 /golumn.egg-info
+.ropeproject/
 *.pyc
