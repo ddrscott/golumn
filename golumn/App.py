@@ -3,6 +3,7 @@ import platform
 import pickle
 import os
 import sys
+import syslog
 import socket
 import tempfile
 import threading
@@ -237,6 +238,16 @@ class GolumnFrame(wx.Frame):
                 wx.GetApp().OpenPath(path, path)
 
         dlg.Destroy()
+
+
+def MyExceptionHook(etype, value, trace):
+    tmp = traceback.format_exception(etype, value, trace)
+    exception = "".join(tmp)
+    log(exception, lvl=syslog.LOG_ERR)
+    wx.MessageBox("Error: {0}".format(exception), caption="Unexpected Error")
+
+
+sys.threadhook = MyExceptionHook
 
 
 class GolumnApp(wx.App):
