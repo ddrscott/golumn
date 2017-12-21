@@ -387,6 +387,14 @@ class SQLiteGrid(wx.grid.Grid):
                     max_columns[c] = max(max_columns[c], size[0])
                     max_row = max(max_row, size[1])
 
+        # check width of all the column labels
+        for c in range(0, self.GetNumberCols()):
+            dc.SetFont(self.GetLabelFont())
+            value = self.GetColLabelValue(c)
+            size = dc.GetTextExtent(value)
+            width = size[0] + ROW_PADDING
+            max_columns[c] = max(max_columns[c], width)
+
         self.BeginBatch()
         for c in range(0, self.GetNumberCols()):
             self.SetColSize(c, max_columns[c] + COLUMN_PADDING)
