@@ -56,8 +56,10 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
 
         # bind to aggregate selection
+        self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.on_label_left_click)
         self.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_label_right_click)
-        self.Bind(wx.grid.EVT_GRID_LABEL_LEFT_DCLICK, self.on_label_left_dbl_click)
+        self.Bind(wx.grid.EVT_GRID_COL_SORT, self.on_grid_col_sort)
+
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_cell_right_click)
         self.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.on_calc_aggregates)
         self.bind_motions()
@@ -107,8 +109,18 @@ class SQLiteGrid(wx.grid.Grid):
     def on_label_right_click(self, evt=None):
         evt.Skip()
 
-    def on_label_left_dbl_click(self, evt=None):
-        evt.Skip()
+    def on_label_left_click(self, evt=None):
+        self.table.force_value = 'selection'
+        self.SelectCol(evt.GetCol())
+        self.table.force_value = None
+
+    def on_grid_col_sort(self, evt=None):
+        if self.IsSortOrderAscending():
+            self.SetSortingColumn(evt.GetCol(), ascending=True)
+            self.GetTable().SortColumn(evt.GetCol(), reverse=False)
+        else:
+            self.SetSortingColumn(evt.GetCol(), ascending=False)
+            self.GetTable().SortColumn(evt.GetCol(), reverse=True)
 
     def on_zoom_in(self, evt=None):
         self.font_size = min(self.font_size * ZOOM_INCREMENT, MAX_FONT_SIZE)

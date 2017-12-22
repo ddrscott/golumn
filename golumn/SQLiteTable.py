@@ -56,6 +56,12 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.where_fuzzy = None
         self.order_by = None
 
+        self.force_value = None
+        """Force a specific value returned from GetValue. Useful for optimizations.
+        There are many many methods which select all rows for no useful reason.
+        Setting this value will make the retrieve of all the rows very fast.
+        """
+
         # events
         wx.CallAfter(self.bind_events)
 
@@ -215,6 +221,9 @@ class SQLiteTable(wx.grid.GridTableBase):
         return ' '.join(query)
 
     def GetValue(self, row, col):
+        if self.force_value is not None:
+            return self.force_value
+
         # calculate page needed
         limit = QUERY_PAGE_SIZE
         page_offset = row % QUERY_PAGE_SIZE
