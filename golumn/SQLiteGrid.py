@@ -188,6 +188,8 @@ class SQLiteGrid(wx.grid.Grid):
 
     def on_remove_filter(self, evt=None):
         self.GetTable().remove_filter()
+        # remove sort indicators
+        self.UnsetSortingColumn()
 
     def fuzzy_filter(self, *args, **kw):
         self.GetTable().fuzzy_filter(*args, **kw)
