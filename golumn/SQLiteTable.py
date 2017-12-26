@@ -29,7 +29,7 @@ STATUS_UPDATE_INTERVAL_SEC = 0.314159
 
 
 class SQLiteTable(wx.grid.GridTableBase):
-    def __init__(self, src=None, dst_db='tmp/golumn.db', dst_table=None):
+    def __init__(self, src, dst_db='tmp/golumn.db', dst_table=None):
         wx.grid.GridTableBase.__init__(self)
 
         log('destination db: {0}'.format(dst_db))
