@@ -98,14 +98,17 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.src_file = io.open(src, 'r', encoding=encoding, errors='ignore')
         sample = self.src_file.read(SNIFF_BYTES)
         self.src_file.seek(0)
-        self.dialect = 'excel'
+        self.dialect = csv.excel
         try:
             # detect file type
-            self.dialect = csv.Sniffer().sniff(sample)
+            self.dialect = csv.Sniffer().sniff(sample, delimiters=",\t|")
             self.dialect.delimiter = bytes(self.dialect.delimiter)
             self.dialect.quotechar = bytes(self.dialect.quotechar)
+            log("[build_csvreader] dialect: {0}".format(repr(self.dialect.delimiter)))
         except Exception as err:
-            wx.MessageBox("Error: {0}\n\nSetting parser to use comma separator and double quotes.".format(err), caption='Could not CSV dialect')
+            self.dialect.delimiter = bytes(',')
+            self.dialect.quotechar = bytes('"')
+            log("Error: {0}\n\nSetting parser to use comma separator and double quotes.".format(err))
         return csv.reader(self.src_file, self.dialect)
 
     def handle_fake_row_count(self):
