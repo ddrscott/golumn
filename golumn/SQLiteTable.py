@@ -1,11 +1,10 @@
-from __future__ import print_function
-from pylru import lrudecorator as lru_cache
 import csv
 import io
 import sqlite3
 import time
 import threading
 import wx
+from functools import lru_cache
 from hashlib import md5
 
 import golumn
@@ -112,12 +111,10 @@ class SQLiteTable(wx.grid.GridTableBase):
         try:
             # detect file type
             self.dialect = csv.Sniffer().sniff(sample, delimiters=''.join(golumn.DELIMITERS.keys()))
-            self.dialect.delimiter = bytes(self.dialect.delimiter)
-            self.dialect.quotechar = bytes(self.dialect.quotechar)
             log("[sniff_csvreader] delimiter: {0}, quotechar: {0}".format(repr(self.dialect.delimiter), repr(self.dialect.quotechar)))
         except Exception as err:
-            self.dialect.delimiter = bytes(',')
-            self.dialect.quotechar = bytes('"')
+            self.dialect.delimiter = u','
+            self.dialect.quotechar = u'"'
             log("Error: {0}\n\nSetting parser to use comma separator and double quotes.".format(err))
         return csv.reader(self.src_file, self.dialect)
 
@@ -200,7 +197,7 @@ class SQLiteTable(wx.grid.GridTableBase):
     def IsEmptyCell(self, row, col):
         return False
 
-    @lru_cache(10)
+    @lru_cache(maxsize=10)
     def fetch_query(self, query):
         log("fetch query: {0}".format(query.replace('%', "%%")))
         return [r for r in self.conn.execute(query)]

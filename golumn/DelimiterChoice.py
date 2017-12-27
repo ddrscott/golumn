@@ -12,11 +12,16 @@ class DelimiterChoice(wx.Choice):
     def dialects(self):
         return [dialect for label, dialect in golumn.DELIMITERS.values()]
 
+    def values_list(self):
+        return [v for v in golumn.DELIMITERS.values()]
+
+    def value_at(self, i):
+        return [v for v in golumn.DELIMITERS.values()][i]
+
     def selected_dialect(self):
-        selected = golumn.DELIMITERS.values()[self.Selection]
-        print("!!!!!!", selected)
+        selected = self.value_at(self.Selection)
         return selected[1]
 
     def selected_label(self):
-        selected = golumn.DELIMITERS.values()[self.Selection]
+        selected = self.value_at(self.Selection)
         return selected[0]
