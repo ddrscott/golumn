@@ -1,5 +1,3 @@
-from __future__ import division
-from __future__ import absolute_import
 import csv
 import re
 import wx
@@ -331,10 +329,10 @@ class SQLiteGrid(wx.grid.Grid):
         self.GetParent().PostSizeEvent()
 
     def bind_motions(self):
-        self.Bind(key_bindings.EVT_MOVE_DOWN, lambda(evt): self.MoveCursorDown(False))
-        self.Bind(key_bindings.EVT_MOVE_UP, lambda(evt): self.MoveCursorUp(False))
-        self.Bind(key_bindings.EVT_MOVE_LEFT, lambda(evt): self.MoveCursorLeft(False))
-        self.Bind(key_bindings.EVT_MOVE_RIGHT, lambda(evt): self.MoveCursorRight(False))
+        self.Bind(key_bindings.EVT_MOVE_DOWN, lambda evt: self.MoveCursorDown(False))
+        self.Bind(key_bindings.EVT_MOVE_UP, lambda evt: self.MoveCursorUp(False))
+        self.Bind(key_bindings.EVT_MOVE_LEFT, lambda evt: self.MoveCursorLeft(False))
+        self.Bind(key_bindings.EVT_MOVE_RIGHT, lambda evt: self.MoveCursorRight(False))
 
     def on_key_down(self, evt=None):
         if vim.on_key_down(self, evt):
