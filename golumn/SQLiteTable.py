@@ -8,6 +8,7 @@ import threading
 import wx
 from hashlib import md5
 
+import golumn
 from golumn.log import log
 from golumn.SQLiteImporter import SQLiteImporter
 from golumn.Utils import unique_array, detect_encoding
@@ -29,7 +30,7 @@ STATUS_UPDATE_INTERVAL_SEC = 0.314159
 
 
 class SQLiteTable(wx.grid.GridTableBase):
-    def __init__(self, src, dst_db='tmp/golumn.db', dst_table=None):
+    def __init__(self, src, dst_db='tmp/golumn.db', dst_table=None, dialect=None):
         wx.grid.GridTableBase.__init__(self)
 
         log('destination db: {0}'.format(dst_db))
@@ -37,7 +38,10 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.dst_db = dst_db
         self.conn = sqlite3.connect(dst_db)
         self.table = dst_table or ('_' + md5(src.encode('utf-8')).hexdigest())
-        self.csvreader = self.build_csvreader(src)
+        if dialect is not None:
+            self.csvreader = self.simple_csvreader(src, dialect)
+        else:
+            self.csvreader = self.sniff_csvreader(src)
         self.headers = unique_array(next(self.csvreader))
         self.start_time = time.time()
 
@@ -93,7 +97,13 @@ class SQLiteTable(wx.grid.GridTableBase):
             pass
         return rows
 
-    def build_csvreader(self, src):
+    def simple_csvreader(self, src, dialect):
+        encoding = detect_encoding(src)
+        self.src_file = io.open(src, 'r', encoding=encoding, errors='ignore')
+        self.dialect = dialect
+        return csv.reader(self.src_file, self.dialect)
+
+    def sniff_csvreader(self, src):
         encoding = detect_encoding(src)
         self.src_file = io.open(src, 'r', encoding=encoding, errors='ignore')
         sample = self.src_file.read(SNIFF_BYTES)
@@ -101,10 +111,10 @@ class SQLiteTable(wx.grid.GridTableBase):
         self.dialect = csv.excel
         try:
             # detect file type
-            self.dialect = csv.Sniffer().sniff(sample, delimiters=",\t|")
+            self.dialect = csv.Sniffer().sniff(sample, delimiters=''.join(golumn.DELIMITERS.keys()))
             self.dialect.delimiter = bytes(self.dialect.delimiter)
             self.dialect.quotechar = bytes(self.dialect.quotechar)
-            log("[build_csvreader] dialect: {0}".format(repr(self.dialect.delimiter)))
+            log("[sniff_csvreader] delimiter: {0}, quotechar: {0}".format(repr(self.dialect.delimiter), repr(self.dialect.quotechar)))
         except Exception as err:
             self.dialect.delimiter = bytes(',')
             self.dialect.quotechar = bytes('"')

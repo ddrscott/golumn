@@ -89,3 +89,12 @@ def detect_encoding(src):
         encoding = 'utf-8'
     return encoding
 
+
+def index_of(list, val):
+    """Helper to get the 0 based index of `val` in the `list`
+    """
+    found = [i for i, k in enumerate(list) if k == val]
+    if len(found) > 0:
+        return found[0]
+    return None
+

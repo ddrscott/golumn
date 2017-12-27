@@ -13,6 +13,7 @@ import wx.grid
 
 from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
 from golumn.log import log
+from golumn.DelimiterChoice import DelimiterChoice
 from golumn.WindowMenu import WindowMenu
 import golumn.Utils as Utils
 import golumn.events as events
@@ -116,7 +117,7 @@ class GolumnFrame(wx.Frame):
         self.cb_keep_on_top = wx.CheckBox(tb, -1, "Keep on Top")
         self.cb_keep_on_top.SetValue(False)
         self.cb_keep_on_top.Bind(wx.EVT_CHECKBOX, self.on_keep_on_top)
-
+        self.ch_delimiter = DelimiterChoice(tb)
         self.cbRegexp = wx.CheckBox(tb, -1, "Regexp")
         self.cbRegexp.SetValue(True)
         self.search = wx.TextCtrl(tb, size=(180, -1), style=wx.TE_PROCESS_ENTER)
@@ -128,6 +129,9 @@ class GolumnFrame(wx.Frame):
 
         tb.AddControl(self.cb_copy_headers)
         tb.AddControl(self.cb_keep_on_top)
+        tb.AddStretchableSpace()
+        tb.AddControl(wx.StaticText(tb, label='Delimiter'))
+        tb.AddControl(self.ch_delimiter)
         tb.AddStretchableSpace()
 
         tb.AddControl(self.cb_live_filter)

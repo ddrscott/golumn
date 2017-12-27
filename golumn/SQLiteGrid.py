@@ -5,9 +5,10 @@ import re
 import wx
 import tempfile
 
+import golumn
 import golumn.App
+import golumn.Utils as Utils
 from golumn.SQLiteTable import SQLiteTable
-from golumn.log import log
 import golumn.events as events
 import golumn.key_bindings as key_bindings
 import golumn.key_bindings.vim as vim
@@ -44,6 +45,7 @@ class SQLiteGrid(wx.grid.Grid):
         self.DisableDragRowSize()
         self.SetUseNativeColLabels()
         self.bind_copy_menu()
+        self.bind_delimiter()
         self.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_select_cell)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         parent.Bind(wx.EVT_MENU, self.on_copy, id=wx.ID_COPY)
@@ -66,15 +68,16 @@ class SQLiteGrid(wx.grid.Grid):
 
         wx.CallAfter(self.init_table, src)
 
-    def init_table(self, src):
-        self.table = SQLiteTable(src=src, dst_db=golumn.App.database_path())
+    def init_table(self, src, dialect=None):
+        self.table = SQLiteTable(src=src, dst_db=golumn.App.database_path(), dialect=dialect)
         self.SetTable(self.table, False)
         for i, ct in enumerate(self.table.column_types):
             if ct == 'numeric' or ct == 'integer':
                 attr = wx.grid.GridCellAttr()
                 attr.SetAlignment(wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
                 self.SetColAttr(i, attr)
-        # let things settle before auto sizing
+        if not dialect:
+            self.update_ch_delimiter()
         self.auto_size_visible_rows()
 
     # TODO: make a pure SQL implementation
@@ -155,6 +158,20 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_menu_copy_with_headers, id=events.EVT_MENU_COPY_WITH_HEADER)
         parent.Bind(wx.EVT_MENU, self.on_menu_copy_as_sql_in, id=events.EVT_MENU_COPY_AS_SQL_IN)
         parent.Bind(wx.EVT_MENU, self.on_menu_copy_as_ruby_array, id=events.EVT_MENU_COPY_AS_RUBY_ARRAY)
+
+    def bind_delimiter(self):
+        parent = self.GetParent()
+        parent.ch_delimiter.Bind(wx.EVT_CHOICE, self.on_choice_delimiter)
+
+    def update_ch_delimiter(self):
+        idx = Utils.index_of(golumn.DELIMITERS.keys(), self.table.dialect.delimiter)
+        if idx:
+            parent = self.GetParent()
+            parent.ch_delimiter.SetSelection(idx)
+
+    def on_choice_delimiter(self, evt):
+        parent = self.GetParent()
+        self.init_table(self.src, dialect=parent.ch_delimiter.selected_dialect())
 
     def on_menu_copy_with_headers(self, evt):
         self.copy_as_excel(with_headers=True)

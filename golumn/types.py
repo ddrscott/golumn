@@ -4,7 +4,7 @@ def detect_columns(rows):
         return []
     result = list()
     for i, h in enumerate(rows[0]):
-        cells = [r[i] for r in rows]
+        cells = [r[i] for r in rows if len(r) > i]
         if are_ints(cells):
             result.append('integer')
         elif are_floats(cells):
