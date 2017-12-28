@@ -1,4 +1,3 @@
-import wx
 import sqlite3
 import sys
 import syslog
