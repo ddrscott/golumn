@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.20.1
+- Fix issue when row contains few columns than headers
+
 ## 0.20.0
 - Stop supporting Python 2!!!
 - Allow delimiter to be selected in UI
