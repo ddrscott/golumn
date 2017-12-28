@@ -1,5 +1,8 @@
 import wx
 import sqlite3
+import sys
+import syslog
+import traceback
 from golumn.log import log
 
 
@@ -21,8 +24,17 @@ class SQLiteImporter():
         self.conn.commit()
 
     def insert(self, rows):
-        self.conn.executemany(self.insert_stmt, rows)
-        self.conn.commit()
+        try:
+            len_headers = len(self.headers)
+            sized_rows = [row[:len_headers] + [None for _ in range(len_headers - len(row))] for row in rows]
+            self.conn.executemany(self.insert_stmt, sized_rows)
+            self.conn.commit()
+        except sqlite3.ProgrammingError as err:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            tmp = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            exception = "".join(tmp)
+            log('Could not insert rows due to {0}'.format(exception), lvl=syslog.LOG_ERR)
+            log('Could not insert rows: {0}'.format(repr(rows)))
 
     def close(self):
         self.conn.close()
