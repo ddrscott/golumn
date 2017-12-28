@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.20.0
+- Stop supporting Python 2!!!
+- Allow delimiter to be selected in UI
+- Restrict delimiter detection to comma, tab and bar
+- Add left click column to sort it
+- Fix sort indicator when removing filters
+
 ## 0.14.0
 - Copy as SQL IN
 - Copy as Array
