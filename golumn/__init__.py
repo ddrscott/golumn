@@ -1,4 +1,5 @@
-__version__ = '0.20.1'
+__version__ = '0.20.2'
+
 from collections import OrderedDict
 import csv
 from copy import copy

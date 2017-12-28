@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.20.1
+## 0.20.2
 - Fix issue when row contains few columns than headers
 
 ## 0.20.0
