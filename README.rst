@@ -1,13 +1,20 @@
 Golumn
 ======
 
-Golumn is a visual data viewer. ``column`` with a "g". It behaves
-similar to the ``column`` command, but with a graphic user interface. It
-bridges the command line and desktop divide by allowing us to present
-tabular data outside the confines of the terminal.
+Golumn is a desktop CSV viewer to replace the ``column``. Think ``column`` with
+a "g". It behaves similar to the ``column`` command, but with a graphic user
+interface. It bridges the command line and desktop divide by allowing us to
+present tabular data outside the confines of the terminal.
 
-The challenges without this tool is attempting managing a bunch of
-tabular output within only a terminal alone. It's difficult to maintain
+.. class:: no-web
+
+    .. image:: https://raw.githubusercontent.com/ddrscott/golumn/dev/docs/screenshot.png
+        :alt: screenshot
+        :width: 100%
+        :align: center
+
+It is challenging without this tool to manage a bunch of
+tabular output within only a terminal window. It's difficult to maintain
 context when long scrolling text and we're often executing the same
 statements to bring up previous results.
 
@@ -16,6 +23,7 @@ A typical workflow without this tool is chain together commands:
 .. code:: sh
 
     # psql
+    #   -X :: ignore ~/.psqlrc 
     #   -A :: remove whitespace
     #   -c :: run the SQL statement
     # column
@@ -23,7 +31,7 @@ A typical workflow without this tool is chain together commands:
     #   -s :: set delimiter
     # less
     #   -S :: Scroll horizontally (enables left/right arrows)
-    psql -Ac 'select * from pg_tables' | column -ts '|' | less -S
+    psql -X -A --pset footer -c 'select * from actors_list' dvdrental | column -ts '|' | less -S
 
 When you're done viewing the data it disappears. Leaving you to remember
 what you saw as you're building the next statement. We could (and
@@ -43,46 +51,33 @@ Usage
     cat data.csv | golumn &
 
     # Show Query Results:
-    psql -Ac 'select * from pg_tables' | golumn &
+    psql -X -A --pset footer -c 'select * from actors_list' dvdrental | golumn &
 
 Installation
 ------------
 
+Requires Python3. Please makes sure it's installed property on target OS with
+Pip package manager.
+
 This package is available via https://pypi.python.org/pypi. To install
-on your system try:
+on the target system try:
 
 .. code:: sh
 
-    pip install golumn --upgrade --user
+    pip3 install golumn --upgrade --user
     # --upgrade ensures you get the latest version
     # --user install only for your user
 
 For more info on install pip packages see:
 https://pip.pypa.io/en/stable/quickstart/
 
-Make sure ``pip`` binaries are available in your ``$PATH``:
-
-.. code:: sh
-
-    pip show golumn
-    # => Name: golumn
-    # => Version: 0.3.0
-    # => Summary: Graphical CSV viewer. `column` with a "g"
-    # => Home-page: https://github.com/ddrscott/golumnpy
-    # => Author: Scott Pierce
-    # => Author-email: ddrscott@gmail.com
-    # => License: MIT
-    # => Location: /Users/scott.pierce/Library/Python/2.7/lib/python/site-packages
-    # => Requires: wxPython
-
-In the above case I need to ensure ``~/Library/Python/2.7/bin`` was in
-my ``$PATH``
+Make sure ``pip3`` binaries are available in your ``$PATH``:
 
 Contributing
 ------------
 
 Bug reports and pull requests are welcome on GitHub at
-https://github.com/ddrscott/golumnpy
+https://github.com/ddrscott/golumn
 
 Feature List
 ------------
@@ -106,5 +101,4 @@ Feature List
 License
 -------
 
-The gem is available as open source under the terms of the `MIT
-License <https://opensource.org/licenses/MIT>`__.
+The gem is available as open source under the terms of the `MIT License <https://opensource.org/licenses/MIT>`__.
