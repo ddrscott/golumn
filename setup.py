@@ -72,12 +72,13 @@ setup(
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
     #   py_modules=["my_module"],
+    python_requires='>=3',
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['wxPython'],
+    install_requires=['wxPython', 'chardet'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
