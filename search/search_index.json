@@ -1,0 +1,44 @@
+{
+    "docs": [
+        {
+            "location": "/",
+            "text": "Golumn CSV Viewer\n\n\nGolumn is a desktop CSV viewer to replace the \ncolumn\n command. Think \ncolumn\n with a \"g\". It behaves similar to the \ncolumn\n command, but with a graphic user interface. It bridges the command line and desktop divide by allowing us to present tabular data outside the confines of the terminal.\n\n\nCommands\n\n\n\n\nmkdocs new [dir-name]\n - Create a new project.\n\n\nmkdocs serve\n - Start the live-reloading docs server.\n\n\nmkdocs build\n - Build the documentation site.\n\n\nmkdocs help\n - Print this help message.\n\n\n\n\nProject layout\n\n\nmkdocs.yml    # The configuration file.\ndocs/\n    index.md  # The documentation homepage.\n    ...       # Other markdown pages, images and other files.",
+            "title": "Golumn CSV Viewer"
+        },
+        {
+            "location": "/#golumn-csv-viewer",
+            "text": "Golumn is a desktop CSV viewer to replace the  column  command. Think  column  with a \"g\". It behaves similar to the  column  command, but with a graphic user interface. It bridges the command line and desktop divide by allowing us to present tabular data outside the confines of the terminal.",
+            "title": "Golumn CSV Viewer"
+        },
+        {
+            "location": "/#commands",
+            "text": "mkdocs new [dir-name]  - Create a new project.  mkdocs serve  - Start the live-reloading docs server.  mkdocs build  - Build the documentation site.  mkdocs help  - Print this help message.",
+            "title": "Commands"
+        },
+        {
+            "location": "/#project-layout",
+            "text": "mkdocs.yml    # The configuration file.\ndocs/\n    index.md  # The documentation homepage.\n    ...       # Other markdown pages, images and other files.",
+            "title": "Project layout"
+        },
+        {
+            "location": "/features/",
+            "text": "Features\n\n\nFilter for Current Cell Value\n\n\nSearch Across All Columns",
+            "title": "Features"
+        },
+        {
+            "location": "/features/#features",
+            "text": "",
+            "title": "Features"
+        },
+        {
+            "location": "/features/#filter-for-current-cell-value",
+            "text": "",
+            "title": "Filter for Current Cell Value"
+        },
+        {
+            "location": "/features/#search-across-all-columns",
+            "text": "",
+            "title": "Search Across All Columns"
+        }
+    ]
+}
