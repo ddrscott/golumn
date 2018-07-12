@@ -285,8 +285,12 @@ class GolumnApp(wx.App):
 
         # bounce app icon
         frm.RequestUserAttention()
+
         # allow the window to go away
-        wx.CallLater(1, lambda: frm.SetWindowStyle(wx.DEFAULT_FRAME_STYLE))
+        wx.CallAfter(self.AfterStart, frm)
+
+    def AfterStart(self, frm):
+        frm.SetWindowStyle(wx.DEFAULT_FRAME_STYLE)
 
     def LoadPackage(self, args):
         wx.CallAfter(self.OpenPath, args.title, args.filename)
