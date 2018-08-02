@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.21.1
+- Fix crashing on OSX 10.12 when built with 10.13
+
 ## 0.21.0
 - Fix window sticking on top when it shouldn't
 - Add semi colon as delimiter
