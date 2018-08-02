@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.21.0
+- Fix window sticking on top when it shouldn't
+- Add semi colon as delimiter
+
 ## 0.20.2
 - Fix issue when row contains few columns than headers
 
