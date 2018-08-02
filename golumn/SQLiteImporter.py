@@ -1,8 +1,11 @@
+import logging
 import sqlite3
 import sys
 import syslog
 import traceback
-from golumn.log import log
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class SQLiteImporter():
@@ -17,7 +20,7 @@ class SQLiteImporter():
         self.conn.execute(query)
         columns = ', '.join([' '.join(('`{0}`'.format(x), y)) for x, y in zip(self.headers, column_types)])
         query = 'CREATE TABLE {0} ({1})'.format(self.table, columns)
-        log(query)
+        logger.debug(query)
         self.conn.execute(query)
         self.insert(rows)
         self.conn.commit()
@@ -32,8 +35,8 @@ class SQLiteImporter():
             exc_type, exc_value, exc_traceback = sys.exc_info()
             tmp = traceback.format_exception(exc_type, exc_value, exc_traceback)
             exception = "".join(tmp)
-            log('Could not insert rows due to {0}'.format(exception), lvl=syslog.LOG_ERR)
-            log('Could not insert rows: {0}'.format(repr(rows)))
+            logger.error('Could not insert rows due to {0}'.format(exception))
+            logger.debug('Could not insert rows: {0}'.format(repr(rows)))
 
     def close(self):
         self.conn.close()

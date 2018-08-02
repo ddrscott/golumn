@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 import sqlite3
 import time
 import threading
@@ -8,7 +9,6 @@ from functools import lru_cache
 from hashlib import md5
 
 import golumn
-from golumn.log import log
 from golumn.SQLiteImporter import SQLiteImporter
 from golumn.Utils import unique_array, detect_encoding
 import golumn.types as types
@@ -27,12 +27,15 @@ INIT_ROW_AUTO_SIZE = 100
 # status update interval
 STATUS_UPDATE_INTERVAL_SEC = 0.314159
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 
 class SQLiteTable(wx.grid.GridTableBase):
     def __init__(self, src, dst_db='tmp/golumn.db', dst_table=None, dialect=None):
         wx.grid.GridTableBase.__init__(self)
 
-        log('destination db: {0}'.format(dst_db))
+        logger.info('destination db: {0}'.format(dst_db))
 
         self.dst_db = dst_db
         self.conn = sqlite3.connect(dst_db)
@@ -73,14 +76,14 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     def clean_up(self):
         if self.conn:
-            log('clean up database')
+            logger.debug('clean up database')
             drop_stmt = 'DROP TABLE IF EXISTS {0}'.format(self.table)
-            log('exec sql: {0}'.format(drop_stmt))
+            logger.debug('exec sql: {0}'.format(drop_stmt))
             self.conn.execute(drop_stmt)
-            log('exec sql: VACUUM')
+            logger.debug('exec sql: VACUUM')
             self.conn.execute('VACUUM')
             self.conn.close()
-            log('connection closed')
+            logger.debug('connection closed')
             self.conn = None
 
     def read_chunk(self):
@@ -111,11 +114,11 @@ class SQLiteTable(wx.grid.GridTableBase):
         try:
             # detect file type
             self.dialect = csv.Sniffer().sniff(sample, delimiters=''.join(golumn.DELIMITERS.keys()))
-            log("[sniff_csvreader] delimiter: {0}, quotechar: {0}".format(repr(self.dialect.delimiter), repr(self.dialect.quotechar)))
+            logger.debug("[sniff_csvreader] delimiter: {0}, quotechar: {0}".format(repr(self.dialect.delimiter), repr(self.dialect.quotechar)))
         except Exception as err:
             self.dialect.delimiter = u','
             self.dialect.quotechar = u'"'
-            log("Error: {0}\n\nSetting parser to use comma separator and double quotes.".format(err))
+            logger.debug("Error: {0}\n\nSetting parser to use comma separator and double quotes.".format(err))
         return csv.reader(self.src_file, self.dialect)
 
     def handle_fake_row_count(self):
@@ -142,7 +145,7 @@ class SQLiteTable(wx.grid.GridTableBase):
         importer = SQLiteImporter(self.headers, db=self.dst_db, table=self.table)
         for row in self.csvreader:
             if parent.closing:
-                log('frame is closing. load data halted.')
+                logger.debug('frame is closing. load data halted.')
                 break
             rows.append(row[:num_headers])
             added += 1
@@ -199,7 +202,7 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     @lru_cache(maxsize=10)
     def fetch_query(self, query):
-        log("fetch query: {0}".format(query.replace('%', "%%")))
+        logger.debug("fetch query: {0}".format(query.replace('%', "%%")))
         return [r for r in self.conn.execute(query)]
 
     def quote_sql(self, text):

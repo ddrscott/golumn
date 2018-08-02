@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+import logging
 import platform
 import pickle
 import os
@@ -12,7 +13,6 @@ import wx
 import wx.grid
 
 from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
-from golumn.log import log
 from golumn.DelimiterChoice import DelimiterChoice
 from golumn.WindowMenu import WindowMenu
 import golumn.Utils as Utils
@@ -20,6 +20,9 @@ import golumn.events as events
 
 HOST = 'localhost'
 PORT = 65430
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 # assign data adapter
@@ -247,7 +250,7 @@ class GolumnFrame(wx.Frame):
 def MyExceptionHook(etype, value, trace):
     tmp = traceback.format_exception(etype, value, trace)
     exception = "".join(tmp)
-    log(exception, lvl=syslog.LOG_ERR)
+    logger.error(exception)
     wx.MessageBox("Error: {0}".format(exception), caption="Unexpected Error")
 
 
@@ -270,7 +273,7 @@ class GolumnApp(wx.App):
     def OpenPath(self, title=None, file_path=None, size=None):
         size = Utils.size_by_percent(size)
         if size:
-            log("Size: {0}".format(size))
+            logger.debug("Size: {0}".format(size))
         size = size or (1024, 600)
         # start window on the top, and demote it in the next cycle
         frm = GolumnFrame(None,
