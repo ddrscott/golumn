@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.21.2
+- Remove more references to syslog
+
 ## 0.21.1
 - Fix crashing on OSX 10.12 when built with 10.13
 

@@ -1,7 +1,6 @@
 import logging
 import sqlite3
 import sys
-import syslog
 import traceback
 
 logging.basicConfig(level=logging.DEBUG)

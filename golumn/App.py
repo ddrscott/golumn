@@ -4,7 +4,6 @@ import platform
 import pickle
 import os
 import sys
-import syslog
 import socket
 import tempfile
 import threading
