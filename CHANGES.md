@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.21.3
+- Rebuilt with OSX 10.9 Python 3.7
+
 ## 0.21.2
 - Remove more references to syslog
 
