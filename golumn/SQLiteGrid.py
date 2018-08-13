@@ -53,7 +53,8 @@ class SQLiteGrid(wx.grid.Grid):
         parent.Bind(wx.EVT_MENU, self.on_sort_a, id=wx.ID_SORT_ASCENDING)
         parent.Bind(wx.EVT_MENU, self.on_sort_z, id=wx.ID_SORT_DESCENDING)
         parent.Bind(wx.EVT_MENU, self.on_remove_filter, id=events.EVT_REMOVE_FILTER)
-        parent.Bind(wx.EVT_MENU, self.on_filter_selection, id=events.EVT_FILTER_BY_SELECTION)
+        parent.Bind(wx.EVT_MENU, self.on_filter_selection, id=events.EVT_FILTER_SELECTION)
+        parent.Bind(wx.EVT_MENU, self.on_exclude_selection, id=events.EVT_EXCLUDE_SELECTION)
         parent.Bind(wx.EVT_MENU, self.on_zoom_in, id=wx.ID_ZOOM_IN)
         parent.Bind(wx.EVT_MENU, self.on_zoom_out, id=wx.ID_ZOOM_OUT)
         parent.Bind(wx.EVT_MENU, self.on_zoom_reset, id=wx.ID_ZOOM_100)
@@ -154,6 +155,7 @@ class SQLiteGrid(wx.grid.Grid):
         self.Bind(wx.EVT_MENU, self.on_sort_a, id=events.EVT_SORT_A)
         self.Bind(wx.EVT_MENU, self.on_sort_z, id=events.EVT_SORT_Z)
         self.Bind(wx.EVT_MENU, self.on_filter_selection, id=events.EVT_FILTER_SELECTION)
+        self.Bind(wx.EVT_MENU, self.on_exclude_selection, id=events.EVT_EXCLUDE_SELECTION)
         self.Bind(wx.EVT_MENU, self.on_remove_filter, id=events.EVT_REMOVE_FILTER)
         parent = self.GetParent()
         parent.Bind(wx.EVT_MENU, self.on_menu_copy_with_headers, id=events.EVT_MENU_COPY_WITH_HEADER)
@@ -195,6 +197,7 @@ class SQLiteGrid(wx.grid.Grid):
 
         # filter items
         menu.Append(events.EVT_FILTER_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
+        menu.Append(events.EVT_EXCLUDE_SELECTION, "&Exclude Selection\tShift+Ctrl+E")
         menu.Append(events.EVT_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
         menu.AppendSeparator()
 
@@ -215,6 +218,10 @@ class SQLiteGrid(wx.grid.Grid):
     def on_filter_selection(self, evt=None):
         value = self.GetCellValue(self.GetGridCursorRow(), self.GetGridCursorCol())
         self.GetTable().filter_by(self.GetGridCursorCol(), value)
+
+    def on_exclude_selection(self, evt=None):
+        value = self.GetCellValue(self.GetGridCursorRow(), self.GetGridCursorCol())
+        self.GetTable().exclude_by(self.GetGridCursorCol(), value)
 
     def on_remove_filter(self, evt=None):
         self.GetTable().remove_filter()

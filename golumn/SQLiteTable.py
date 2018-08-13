@@ -273,6 +273,13 @@ class SQLiteTable(wx.grid.GridTableBase):
             self.where.append("`{0}` IS NULL".format(self.headers[col]))
         self.apply_query()
 
+    def exclude_by(self, col, value):
+        if value:
+            self.where.append("`{0}` <> '{1}'".format(self.headers[col], value))
+        else:
+            self.where.append("`{0}` IS NOT NULL".format(self.headers[col]))
+        self.apply_query()
+
     def apply_query(self):
         grid = self.GetView()
         row = grid.GetGridCursorRow()

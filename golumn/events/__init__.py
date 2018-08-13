@@ -1,12 +1,12 @@
 import wx.lib.newevent
 
-EVT_FILTER_BY_SELECTION = wx.NewId()
 EVT_REMOVE_FILTER = wx.NewId()
 EVT_DEBUG_CONSOLE = wx.NewId()
 
 EVT_SORT_A = wx.NewId()
 EVT_SORT_Z = wx.NewId()
 EVT_FILTER_SELECTION = wx.NewId()
+EVT_EXCLUDE_SELECTION = wx.NewId()
 EVT_REMOVE_FILTER = wx.NewId()
 
 EVT_MENU_COPY_WITH_HEADER = wx.NewId()

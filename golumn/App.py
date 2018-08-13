@@ -87,7 +87,8 @@ class GolumnFrame(wx.Frame):
         dataMenu.Append(wx.ID_SORT_DESCENDING, "Sort &Z to A\tShift+Ctrl+Z")
         dataMenu.Append(events.EVT_REMOVE_FILTER, "&Remove Sort and Filter\tShift+Ctrl+R")
         dataMenu.AppendSeparator()
-        dataMenu.Append(events.EVT_FILTER_BY_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
+        dataMenu.Append(events.EVT_FILTER_SELECTION, "Filter by &Selection\tShift+Ctrl+S")
+        dataMenu.Append(events.EVT_EXCLUDE_SELECTION, "&Exclude Selection\tShift+Ctrl+E")
         mb.Append(dataMenu, "&Data")
 
         # setup Edit menu
