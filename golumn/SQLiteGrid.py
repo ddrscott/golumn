@@ -19,6 +19,9 @@ COLUMN_PADDING = 10
 # https://github.com/wxWidgets/wxWidgets/blob/4d4c14cd656734ca42b6e845618e1a46398436ed/src/generic/grid.cpp#L8482
 ROW_PADDING = 6
 
+# Percentage factor of windows width
+MAX_COLUMN_WIDTH_PCT = 0.9
+
 MAX_FONT_SIZE = 200.0
 
 MIN_FONT_SIZE = 1.0
@@ -377,13 +380,15 @@ class SQLiteGrid(wx.grid.Grid):
                     max_columns[c] = max(max_columns[c], size[0])
                     max_row = max(max_row, size[1])
 
+        max_column_width = self.GridWindow.Size[0] * MAX_COLUMN_WIDTH_PCT
+
         # check width of all the column labels
         for c in range(0, self.GetNumberCols()):
             dc.SetFont(self.GetLabelFont())
             value = self.GetColLabelValue(c)
             size = dc.GetTextExtent(value)
             width = size[0] + ROW_PADDING
-            max_columns[c] = max(max_columns[c], width)
+            max_columns[c] = min(max(max_columns[c], width), max_column_width)
 
         self.BeginBatch()
         for c in range(0, self.GetNumberCols()):
