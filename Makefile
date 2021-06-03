@@ -6,8 +6,10 @@ version:
 icon:
 	img2py -a -F -i -n AppIcon res/grid-128.ico golumn/images.py
 
-dist:
+dist: dist/golumn-${VERSION}-py3-none-any.whl
+
+dist/golumn-${VERSION}-py3-none-any.whl:
 	python setup.py bdist_wheel
 
-publish:
+publish: dist
 	twine upload dist/golumn-${VERSION}-py3-none-any.whl
