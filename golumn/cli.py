@@ -98,6 +98,6 @@ def main(args=None):
     # we must be the first instance, start it up
     app = GolumnApp(useBestVisual=True)
     title = args.title or os.path.basename(args.filename or '-')
-    app.OpenPath(title, args.filename, size=args.size)
+    app.OpenPath(title, args.filename, size=args.size, in_memory=False)
     app.MainLoop()
     return 0

@@ -11,7 +11,7 @@ import traceback
 import wx
 import wx.grid
 
-from golumn.SQLiteGrid import SQLiteGrid as CreateGrid
+from golumn.SQLiteGrid import SQLiteGrid
 from golumn.DelimiterChoice import DelimiterChoice
 from golumn.WindowMenu import WindowMenu
 import golumn.Utils as Utils
@@ -19,6 +19,7 @@ import golumn.events as events
 
 HOST = 'localhost'
 PORT = 65430
+IN_MEMORY = False
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -26,6 +27,9 @@ logger = logging.getLogger(__name__)
 
 # assign data adapter
 def database_path():
+    if IN_MEMORY:
+        return "file::memory:?cache=shared"
+
     import os
     from os.path import normpath, isdir, join
     data_dir = wx.StandardPaths.Get().GetUserLocalDataDir()
@@ -37,6 +41,7 @@ def database_path():
 class GolumnFrame(wx.Frame):
     def __init__(self, *args, **kw):
         self.src = kw.pop('src')
+        self.in_memory = kw.pop('in_memory', False)
         wx.Frame.__init__(self, *args, **kw)
 
         self.closing = False
@@ -52,7 +57,7 @@ class GolumnFrame(wx.Frame):
     def MakeGrid(self):
         try:
             # Setup the grid BEFORE the frame
-            self.grid = CreateGrid(self, self.src)
+            self.grid = SQLiteGrid(self, self.src)
             self.PostSizeEvent()
         except Exception as err:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -148,7 +153,6 @@ class GolumnFrame(wx.Frame):
         self.search.Bind(wx.EVT_TEXT_ENTER, self.on_filter_key)
         self.search.Bind(wx.EVT_TEXT, self.on_filter_key)
 
-        self.Bind(wx.EVT_CLOSE, self.on_close)
         tb.Realize()
 
     def MakeStatusBar(self):
@@ -222,12 +226,12 @@ class GolumnFrame(wx.Frame):
             self.grid.fuzzy_filter(like=None)
 
     def on_close(self, evt=None):
-        evt.Skip()
-        if not self.closing:
-            self.closing = True
-            self.Close()
-            if hasattr(self, 'grid'):
-                self.grid.table.clean_up()
+        self.Close()
+
+    def __del__(self):
+        if hasattr(self, 'grid'):
+            self.grid.table.clean_up()
+
 
     def on_open(self, evt=None):
         # filename = wx.FileSelector("Choose a file to open")
@@ -259,6 +263,7 @@ sys.threadhook = MyExceptionHook
 
 class GolumnApp(wx.App):
     def OnInit(self):
+        self.frm = None
         self.SetAppName('Golumn')
         if self.CheckServer():
             return False
@@ -267,30 +272,37 @@ class GolumnApp(wx.App):
         return True
 
     def OnExit(self):
-        # print "OnExit called"
+        # print("OnExit called")
+        # if self.frm:
+        #     self.frm.on_close()
+
         return wx.App.OnExit(self)
 
-    def OpenPath(self, title=None, file_path=None, size=None):
+    def OpenPath(self, title=None, file_path=None, size=None, in_memory=False):
+        # FIXME don't use global
+        global IN_MEMORY
+        IN_MEMORY = in_memory
+
         size = Utils.size_by_percent(size)
         if size:
             logger.debug("Size: {0}".format(size))
         size = size or (1024, 600)
         # start window on the top, and demote it in the next cycle
-        frm = GolumnFrame(None,
+        self.frm = GolumnFrame(None,
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP,
                           title=title or file_path,
                           size=size,
-                          src=file_path,
+                          src=file_path
                           )
 
-        Utils.center_on_active_display(frm, size)
-        frm.Show()
+        Utils.center_on_active_display(self.frm, size)
+        self.frm.Show()
 
         # bounce app icon
-        frm.RequestUserAttention()
+        self.frm.RequestUserAttention()
 
         # allow the window to go away
-        wx.CallAfter(self.AfterStart, frm)
+        wx.CallAfter(self.AfterStart, self.frm)
 
     def AfterStart(self, frm):
         frm.SetWindowStyle(wx.DEFAULT_FRAME_STYLE)

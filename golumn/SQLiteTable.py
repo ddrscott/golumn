@@ -11,7 +11,7 @@ from hashlib import md5
 import golumn
 from golumn.SQLiteImporter import SQLiteImporter
 from golumn.Utils import unique_array, detect_encoding
-import golumn.types as types
+import golumn.typer
 
 SNIFF_BYTES = 65535
 
@@ -38,7 +38,12 @@ class SQLiteTable(wx.grid.GridTableBase):
         logger.info('destination db: {0}'.format(dst_db))
 
         self.dst_db = dst_db
-        self.conn = sqlite3.connect(dst_db)
+
+        if 'file::memory' in dst_db:
+            self.conn = sqlite3.connect(dst_db, uri=True)
+        else:
+            self.conn = sqlite3.connect(dst_db)
+
         self.table = dst_table or ('_' + md5(src.encode('utf-8')).hexdigest())
         if dialect is not None:
             self.csvreader = self.simple_csvreader(src, dialect)
@@ -49,10 +54,12 @@ class SQLiteTable(wx.grid.GridTableBase):
 
         # import first chunk before starting background load
         rows = self.read_chunk()
-        self.column_types = types.detect_columns(rows)
-        importer = SQLiteImporter(self.headers, db=dst_db, table=self.table)
-        importer.create_table(rows, self.column_types)
-        importer.close()
+        self.column_types = golumn.typer.detect_columns(rows)
+
+        self.importer = SQLiteImporter(self.headers, db=dst_db, table=self.table)
+        self.importer.create_table(rows, self.column_types)
+        self.importer.close()
+
         self.total_rows = len(rows)
         self.initial_rows = len(rows)
         self.handle_fake_row_count()
@@ -76,12 +83,15 @@ class SQLiteTable(wx.grid.GridTableBase):
 
     def clean_up(self):
         if self.conn:
-            logger.debug('clean up database')
-            drop_stmt = 'DROP TABLE IF EXISTS {0}'.format(self.table)
-            logger.debug('exec sql: {0}'.format(drop_stmt))
-            self.conn.execute(drop_stmt)
-            logger.debug('exec sql: VACUUM')
-            self.conn.execute('VACUUM')
+            if  'file::memory' in self.dst_db:
+                logger.debug('in memory db. nothing to clean up')
+            else:
+                logger.debug('clean up database')
+                drop_stmt = 'DROP TABLE IF EXISTS {0}'.format(self.table)
+                logger.debug('exec sql: {0}'.format(drop_stmt))
+                self.conn.execute(drop_stmt)
+                logger.debug('exec sql: VACUUM')
+                self.conn.execute('VACUUM')
             self.conn.close()
             logger.debug('connection closed')
             self.conn = None

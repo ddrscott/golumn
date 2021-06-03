@@ -36,4 +36,3 @@ def are_ints(items):
         except ValueError:
             return False
     return True
-
