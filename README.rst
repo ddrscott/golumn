@@ -56,6 +56,13 @@ This package is available via https://pypi.python.org/pypi. To install on the ta
     # --upgrade ensures you get the latest version
     # --user install only for your user
 
+
+On OSX Python with GUI support is required. Install using the following:
+
+.. code:: sh
+
+    conda install python.app
+
 For more info on install pip packages see:
 https://pip.pypa.io/en/stable/quickstart/
 
