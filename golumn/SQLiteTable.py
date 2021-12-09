@@ -296,7 +296,6 @@ class SQLiteTable(wx.grid.GridTableBase):
         col = grid.GetGridCursorCol()
         start = time.time()
         new_total = self.select_count()
-        grid.SetGridCursor(row, col)
 
         self.set_status_text('time: {0:,.1f} s, rows: {1:,}'.format(time.time() - start, new_total))
         grid.BeginBatch()
@@ -314,7 +313,9 @@ class SQLiteTable(wx.grid.GridTableBase):
         # try to put cursor back where it was
         if row >= self.total_rows:
             row = self.total_rows - 1
-        wx.CallAfter(lambda: grid.SetGridCursor(row, col))
+
+        if new_total > 0 and row and col:
+            wx.CallAfter(lambda: grid.SetGridCursor(row, col))
 
     def fuzzy_filter(self, **kw):
         self.where_fuzzy = kw
