@@ -414,4 +414,3 @@ class SQLiteGrid(wx.grid.Grid):
         import threading
         t = threading.Thread(target=embed, args=(globals(), locals()))
         t.setDaemon(True)
-        t.start()
